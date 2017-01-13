@@ -21,7 +21,6 @@ class TestFirst extends PHPUnit_Extensions_Selenium2TestCase
 // open | / |
 		$this->url("/");
 // assertTitle | YY Demo |
-		echo $this->source();
 		$result = $this->title();
 		$this->assertEquals("YY Demo", $result);
 // assertText | css=h2 | Hello World
