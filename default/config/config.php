@@ -15,7 +15,7 @@ define('SESSIONS_DIR', ROOT_DIR . 'runtime/sessions/');
 define('FILES_DIR', ROOT_DIR . 'www/files/');
 
 if (!CRON_MODE) {
-  define('DOMAIN_NAME', isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : $_SERVER['SERVER_ADDR']);
+  define('DOMAIN_NAME', isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : 'localhost'));
   define('PROTOCOL', (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']) ? 'https://' : 'http://');
   define('ROOT_PATH', ''); // If not empty must have trailing slash but not initial
   define('ROOT_URL', DOMAIN_NAME . '/' . ROOT_PATH);
