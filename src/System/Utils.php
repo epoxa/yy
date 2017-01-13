@@ -100,8 +100,8 @@ class Utils
 
 	static public function StoreParamsInSession()
 	{
-		if ($_SERVER['QUERY_STRING'] || !isset($_SESSION['queryString'])) {
-			$queryString = $_SERVER['QUERY_STRING'];
+		if (isset($_SERVER['QUERY_STRING']) && $_SERVER['QUERY_STRING'] || !isset($_SESSION['queryString'])) {
+			$queryString = isset($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '';
 			$_SESSION['queryString'] = $queryString; // Store original query string (without referer, not split to separated params)
 			$request = [];
 			parse_str($queryString, $request);
