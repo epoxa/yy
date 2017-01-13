@@ -1,0 +1,8 @@
+.todoapp {
+    color: #4d4d4d;
+    font: 300 14px/1.4em "Helvetica Neue",Helvetica,Arial,sans-serif;
+    background: #fff none repeat scroll 0 0;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1);
+    margin: 130px 0 40px;
+    position: relative;
+}

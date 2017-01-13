@@ -1,0 +1,7 @@
+.idea/
+
+default/config/.backup/
+default/runtime/
+design/
+
+vendor
