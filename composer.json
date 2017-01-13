@@ -1,0 +1,21 @@
+{
+  "name": "epoxa/yy",
+  "description": "Bad style PHP framework for lazy schoolboy developers",
+  "minimum-stability": "stable",
+  "license": "free",
+  "authors": [
+    {
+      "name": "epoxa",
+      "email": "epoxa@vvproject.ru"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+       "YY\\": "src/",
+       "YY\\Demo\\": "default/classes/"
+    }
+  },
+  "require-dev": {
+    "phpunit/phpunit-selenium": "^3.0"
+  }
+}
