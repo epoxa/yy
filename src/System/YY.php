@@ -77,6 +77,9 @@ class YY extends Robot // Странно, похоже, такое наслед�
 			mkdir(DATA_DIR, 0777, true);
 			file_put_contents($fname, self::$WORLD->_YYID);
 			YY::Log('system', 'World created!');
+			if (!file_exists(SESSIONS_DIR)) {
+				mkdir(SESSIONS_DIR, 0777, true);
+			}
 		}
 	}
 

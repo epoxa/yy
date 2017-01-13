@@ -17,12 +17,12 @@ define('FILES_DIR', ROOT_DIR . 'www/files/');
 if (!CRON_MODE) {
   define('DOMAIN_NAME', isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : $_SERVER['SERVER_ADDR']);
   define('PROTOCOL', (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']) ? 'https://' : 'http://');
-  define('ROOT_PATH', ''); // В URL, относительно домена. Если не пустой, то должен заканчиваться на слеш, а начинаться не со слеша!
+  define('ROOT_PATH', ''); // If not empty must have trailing slash but not initial
   define('ROOT_URL', DOMAIN_NAME . '/' . ROOT_PATH);
   define('COOKIE_NAME', 'YY');
   define('INSTALL_COOKIE_NAME', 'XX');
   define('DEFAULT_SESSION_IP_CHECKING', true);
-  define('DEFAULT_SESSION_LIFETIME', 3600 * 24 * 3); // Три дня
+  define('DEFAULT_SESSION_LIFETIME', 3600 * 24 * 3); // Three days
 
   ini_set('session.gc_maxlifetime', DEFAULT_SESSION_LIFETIME);
   ini_set('session.cookie_lifetime', DEFAULT_SESSION_LIFETIME);
