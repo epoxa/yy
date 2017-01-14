@@ -15,3 +15,4 @@ before_script:
   - "sh -e /etc/init.d/xvfb start"
   - sleep 3 # give xvfb some time to start
   - "java -jar selenium-server-standalone-2.47.1.jar &"
+  - sleep 3 # give selenium some time to start
