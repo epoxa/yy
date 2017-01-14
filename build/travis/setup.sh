@@ -1,5 +1,5 @@
 #!/bin/bash
-sudo ls -l /etc/init.d/*
+sudo ls -l /usr/sbin/ph*
 sudo apt-get update
 sudo apt-get -y install nginx
 cat build/travis/etc/nginx/travis.nginx.conf | sed -e "s,\$DOCROOT,`pwd`," | sudo tee /etc/nginx/nginx.conf
