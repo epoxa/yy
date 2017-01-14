@@ -1,6 +1,4 @@
 #!/bin/bash
-php --version
-php -i
 sudo apt-get install php-fpm
 sudo apt-get update
 sudo apt-get -y install nginx
