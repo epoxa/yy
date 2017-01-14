@@ -1,7 +1,5 @@
 #!/bin/bash
-sudo php-fpm7.0 -D
-sudo service php7.0-fpm start
-sudo php-fpm
+sudo ls -l /etc/init.d/*
 sudo apt-get update
 sudo apt-get -y install nginx
 cat build/travis/etc/nginx/travis.nginx.conf | sed -e "s,\$DOCROOT,`pwd`," | sudo tee /etc/nginx/nginx.conf
