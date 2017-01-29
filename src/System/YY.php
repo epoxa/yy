@@ -463,7 +463,9 @@ class YY extends Robot // Странно, похоже, такое наслед�
 			} else {
 				throw new Exception('Named style not found: ' . $visual);
 			}
-		}
+		} else if (!$visual) {
+            $visual = [];
+        }
 		foreach ($visual as $name => $value) {
 			if (substr($name, 0, 1) === '_' || in_array($name,['class','style','before','after','beforeContent','afterContent'], true)) {
 				continue;
@@ -486,7 +488,9 @@ class YY extends Robot // Странно, похоже, такое наслед�
 			$cls = $visual['class'];
 			if (is_string($cls)) {
 				$cls = explode(' ', $cls);
-			}
+			} else if (!$cls) {
+                $cls = [];
+            }
 			foreach ($cls as $className) {
 				if ($className !== '') {
 					$classes[$className] = null;
