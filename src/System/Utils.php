@@ -10,6 +10,19 @@ use YY\System\YY;
 class Utils
 {
 
+    public static function ImportEnvironmentVariables($list) {
+        if (!is_array($list)) {
+            $list = [$list => null];
+        }
+        foreach ($list as $varName => $defaultValue) {
+            if (defined($varName)) continue;
+            $readValue = getenv($varName);
+            if ($readValue === false) $readValue = $defaultValue;
+            define($varName, $readValue);
+        }
+
+    }
+
 	/**
 	 * @param $text
 	 *
