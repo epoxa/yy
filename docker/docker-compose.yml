@@ -1,3 +1,4 @@
+version: "2"
 services:
   yy:
     image: richarvey/nginx-php-fpm:latest
