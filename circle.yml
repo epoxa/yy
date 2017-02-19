@@ -1,13 +1,11 @@
-machine:
-  services:
-    - docker
+#machine:
+#  services:
+#    - docker
 
 dependencies:
   override:
-    - docker info
     - sudo pip install docker-compose
     - sudo pip install --upgrade six # fix error with docker-compose
-    - docker-compose
     - cd docker && docker-compose up -d
     - sleep 30
 
