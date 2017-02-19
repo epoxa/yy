@@ -15,7 +15,7 @@ class View extends Data
 	 */
 	function makeObjectHandle($object)
 	{
-		$trans = $this['TRANSLATE'];
+		$trans = $this['HANDLES'];
 		if (isset($trans[$object])) {
 			$transId = $trans[$object];
 		} else {
@@ -33,7 +33,7 @@ class View extends Data
 	 */
 	function findObjectByHandle($handle)
 	{
-		return isset($this['TRANSLATE'][$handle]) ? $this['TRANSLATE'][$handle] : null;
+		return isset($this['HANDLES'][$handle]) ? $this['HANDLES'][$handle] : null;
 	}
 
 	/**
@@ -67,7 +67,7 @@ class View extends Data
 	 */
 	function robotDeleting($robot)
 	{
-		$trans = $this['TRANSLATE'];
+		$trans = $this['HANDLES'];
 		if (empty($trans[$robot])) return;
 		$handle = $trans[$robot];
 		$this['DELETED'][] = $handle;

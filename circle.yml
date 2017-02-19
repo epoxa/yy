@@ -1,0 +1,15 @@
+machine:
+  services:
+    - docker
+
+dependencies:
+  override:
+    - docker info
+    - cd docker
+    - docker-compose up -d
+    - sleep 30
+
+test:
+  override:
+    - docker-compose exec -T tests /data/vendor/phpunit/phpunit/phpunit -c /data/phpunit.xml
+

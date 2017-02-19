@@ -23,7 +23,7 @@ class Hello extends Robot
 			echo YY::drawCommand($btn, 'Say', $this, 'setName');
 		} else {
 			echo YY::drawText($phr, htmlspecialchars(YY::$ME['name']));
-			echo YY::drawText($phr, "Glad to meet you " . htmlspecialchars($this['name']));
+			echo YY::drawText($phr, ["Glad to meet you %s", htmlspecialchars($this['name'])]);
 			echo YY::drawText($phr, "Wanna look at this demo source code?");
 			if (!isset($this['answer'])) {
 				echo YY::drawText(null, '<br>');
