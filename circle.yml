@@ -5,6 +5,7 @@ machine:
 dependencies:
   override:
     - docker info
+    - docker-compose -v
     - cd docker && docker-compose up -d
     - sleep 30
 
