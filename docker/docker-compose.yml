@@ -12,7 +12,8 @@ services:
     volumes:
       - ./../:/var/www/html
   tests:
-    image: million12/php-testing
+    image: rednut/docker-php-behat-selenium-test-runner:latest
+#    image: million12/php-testing
     links:
       - yy
     container_name: tests

@@ -10,7 +10,7 @@
     var translatorHandle;
 
     var createHandle = function () {
-        $translatorIndicator = $('<div style="display: none; position: absolute; z-index: 9999; background-color: red; width: 3mm; height: 3mm; border-radius: 3mm; cursor: crosshair"></div>');
+        $translatorIndicator = $('<div id="yy-translator" style="display: none; position: absolute; z-index: 9999; background-color: red; width: 3mm; height: 3mm; border-radius: 3mm; cursor: crosshair"></div>');
         $translatorIndicator.appendTo('body').hover(
             function () {
                 $translatorIndicator.stop(true, true).show();

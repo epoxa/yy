@@ -1,0 +1,7 @@
+FROM busybox
+
+RUN mkdir -p /data
+
+ADD * /data/
+
+VOLUME /data
