@@ -10,6 +10,19 @@ use YY\System\YY;
 class Utils
 {
 
+    public static function ImportEnvironmentVariables($list) {
+        if (!is_array($list)) {
+            $list = [$list => null];
+        }
+        foreach ($list as $varName => $defaultValue) {
+            if (defined($varName)) continue;
+            $readValue = getenv($varName);
+            if ($readValue === false) $readValue = $defaultValue;
+            define($varName, $readValue);
+        }
+
+    }
+
 	/**
 	 * @param $text
 	 *
@@ -26,7 +39,8 @@ class Utils
 	static public function StartSession($IncarnationYYID = null)
 	{
 		if (session_status() !== PHP_SESSION_ACTIVE) {
-			session_set_cookie_params(DEFAULT_SESSION_LIFETIME, '/', DOMAIN_NAME);
+			list($domain_without_port, $port) = explode(':', DOMAIN_NAME);
+			session_set_cookie_params(DEFAULT_SESSION_LIFETIME, '/', $domain_without_port);
 			// Домен и путь, похоже, нужны, чтобы IE не глючил
 			session_name(COOKIE_NAME); // И только эта кука! Все остальное, в т. ч. идентификатор инкарнации, хранится в данных сессии.
 			@session_start();

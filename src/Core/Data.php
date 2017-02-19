@@ -624,8 +624,10 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
 			}
 			return $res;
 		} catch (Exception $e) {
-			eval('throw new ' . get_class($e) . '($name . ": " . $e->getMessage());');
-		}
+            throw $e;
+            // Commented out due to autoload issue for an unknown classes
+            // eval('throw new ' . get_class($e) . '($name . ": " . ' . json_encode($e->getMessage()) . ');');
+        }
 	}
 
 	public function _DROP($key)
