@@ -5,10 +5,7 @@ machine:
 dependencies:
   override:
     - docker info
-    - cd docker
-    - pwd
-    - ls -l
-    - docker-compose up -d
+    - cd docker && docker-compose up -d
     - sleep 30
 
 test:
