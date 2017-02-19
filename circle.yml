@@ -4,8 +4,9 @@
 
 dependencies:
   override:
-    - sudo pip install docker-compose
-    - sudo pip install --upgrade six # fix error with docker-compose
+    - pip install
+    - pip install docker-compose
+    - pip install --upgrade six # fix error with docker-compose
     - cd docker && docker-compose up -d
     - sleep 30
 
