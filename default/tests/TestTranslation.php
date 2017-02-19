@@ -30,7 +30,7 @@ class TestTranslation extends PHPUnit_Extensions_Selenium2TestCase
 		$this->byId("1[#translateMode]")->click();
 		$result = $this->byCssSelector("div.alert.alert-danger > span")->text();
 		$this->assertEquals("Selected language does not have a translation at the moment.\nYou can translate any text by clicking red dot while \"Translate mode\" is on.", $result);
-
+		return;
 // answerOnNextPrompt | К списку |
 // ERROR: Caught exception [ERROR: Unsupported command [answerOnNextPrompt | К списку | ]]
 

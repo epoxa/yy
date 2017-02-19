@@ -111,7 +111,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 			'RENDERED' => [],
 			'HEADERS' => [],
 			'DELETED' => [],
-			'TRANSLATE' => [],
+			'HANDLES' => [],
 			'created' => time(), // Нужно для протоколирования
 		];
 		if ($YYID) { // TODO: Не помню, зачем создавать новый объект с таким-же YYID, который был? Может, поэтому и теряются объекты?
@@ -141,11 +141,11 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		YY::$WORLD['SYSTEM']->viewCreated();
 	}
 
-    /**
-     * @param      $templateName
-     * @param null $params - DO NOT REMOVE. May be used in template.
-     */
-    static public function DrawEngine($templateName, $params = null)
+	/**
+	 * @param      $templateName
+	 * @param null $params - DO NOT REMOVE. May be used in template.
+	 */
+	static public function DrawEngine($templateName, $params = null)
 	{
 		YY::Log('system', 'Draw engine ' . $templateName);
 
@@ -468,10 +468,10 @@ class YY extends Robot // Странно, похоже, такое наслед�
 				throw new Exception('Named style not found: ' . $visual);
 			}
 		} else if (!$visual) {
-            $visual = [];
-        }
+			$visual = [];
+		}
 		foreach ($visual as $name => $value) {
-			if (substr($name, 0, 1) === '_' || in_array($name,['class','style','before','after','beforeContent','afterContent'], true)) {
+			if (substr($name, 0, 1) === '_' || in_array($name, ['class', 'style', 'before', 'after', 'beforeContent', 'afterContent'], true)) {
 				continue;
 			}
 			if ($name === '@' || is_int($name)) {
@@ -493,8 +493,8 @@ class YY extends Robot // Странно, похоже, такое наслед�
 			if (is_string($cls)) {
 				$cls = explode(' ', $cls);
 			} else if (!$cls) {
-                $cls = [];
-            }
+				$cls = [];
+			}
 			foreach ($cls as $className) {
 				if ($className !== '') {
 					$classes[$className] = null;
@@ -514,7 +514,9 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		}
 	}
 
-	static private function parseVisual($visual, &$htmlBefore, &$htmlBeforeContent, &$htmlAfterContent, &$htmlAfter, &$attributesText)
+	static private function parseVisual($visual,
+		&$htmlBefore, &$htmlBeforeContent, &$htmlAfterContent, &$htmlAfter, &$attributesText,
+		&$content = null)
 	{
 		$htmlBefore = '';
 		$htmlBeforeContent = '';
@@ -524,6 +526,9 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		$styles = null;
 		$classes = null;
 		self::modifyVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributes, $styles, $classes);
+		if ($content) {
+			self::Translate($content, $attributes);
+		}
 		$attributesText = '';
 		if ($attributes) {
 			foreach ($attributes as $name => $value) {
@@ -625,7 +630,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		 * @var $htmlAfter         string
 		 * @var $attributesText    string
 		 */
-		self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText);
+		self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText, $htmlCaption);
 		$otherParams = self::packParams($params, true);
 		return $htmlBefore . '<a' . $attributesText . ' href="javascript:void(0);" onclick="go(' . self::GetHandle($robot) . ',\'' . htmlspecialchars($method)
 		. '\',{' . $otherParams . '}); return false;">' . $htmlBeforeContent . $htmlCaption . $htmlAfterContent . '</a>' . $htmlAfter;
@@ -639,7 +644,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		 * @var $htmlAfter         string
 		 * @var $attributesText    string
 		 */
-		self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText);
+		self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText, $htmlCaption);
 		$handle = self::GetHandle($robot);
 		$id = $handle . '[' . $param . ']=' . urlencode($value);
 		$action = $method ? ";go($handle,\"$method\")" : '';
@@ -656,7 +661,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		 * @var $htmlAfter         string
 		 * @var $attributesText    string
 		 */
-		self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText);
+		self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText, $htmlCaption);
 		$handle = self::GetHandle($robot);
 		$id = $handle . '[#' . $param . ']';
 		$action = $method ? ";go($handle,\"$method\")" : '';
@@ -673,7 +678,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		 * @var $htmlAfter         string
 		 * @var $attributesText    string
 		 */
-		self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText);
+		self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText, $htmlCaption);
 		$otherParams = self::packParams($params, false);
 		return $htmlBefore . '<a' . $attributesText . ' href="?who=' . self::$CURRENT_VIEW->_YYID . '-' . self::GetHandle($robot) . '&' . $otherParams
 		. '" target="_blank">' . $htmlBeforeContent . $htmlCaption . $htmlAfterContent . '</a>' . $htmlAfter;
@@ -701,7 +706,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		 * @var $htmlAfter         string
 		 * @var $attributesText    string
 		 */
-		self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText);
+		self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText, $htmlCaption);
 		return $htmlBefore . '<a' . $attributesText . ' href="' . $href . '">' . $htmlBeforeContent . $htmlCaption . $htmlAfterContent . '</a>' . $htmlAfter;
 	}
 
@@ -738,7 +743,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		 * @var $htmlAfter         string
 		 * @var $attributesText    string
 		 */
-		self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText);
+		self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText, $htmlText);
 		$htmlText = $htmlBeforeContent . $htmlText . $htmlAfterContent;
 		if ($attributesText) $htmlText = '<span' . $attributesText . '>' . $htmlText . '</span>';
 		return $htmlBefore . $htmlText . $htmlAfter;
@@ -1075,19 +1080,104 @@ class YY extends Robot // Странно, похоже, такое наслед�
 						if ($val == "") {
 							$val = null;
 						} else $val = floatval($val);
-                        break;
-                    case 'z_':
-                        $val = null;
-                        break;
-                    default:
-                        throw new Exception("Untyped parameter: " . $key);
-                }
-                $key = substr($key, 2);
-                $params[$key] = $val;
-            }
-        }
+						break;
+					case 'z_':
+						$val = null;
+						break;
+					default:
+						throw new Exception("Untyped parameter: " . $key);
+				}
+				$key = substr($key, 2);
+				$params[$key] = $val;
+			}
+		}
 
 		$who->$methodName($params);
+	}
+
+	///////////////////////////////////
+	//
+	// Translation
+	//
+	///////////////////////////////////
+
+	/**
+	 * @param $htmlCaption null|string|array|\Iterator
+	 * @param $attributes
+	 *
+	 * @return mixed
+	 *
+	 */
+	protected static function Translate(&$htmlCaption, &$attributes)
+	{
+
+		$lang = isset(self::$CURRENT_VIEW, self::$CURRENT_VIEW['LANGUAGE']) ? self::$CURRENT_VIEW['LANGUAGE'] : null;
+
+		if ($htmlCaption) {
+
+			if (is_string($htmlCaption)) {
+
+				if (!$lang) return $htmlCaption; // Just optimization
+
+				// Make surrogate slug from text
+
+				if (strlen($htmlCaption) <= 200) {
+					$slug = md5($htmlCaption);
+				} else {
+					$slug = md5(substr($htmlCaption, 0, 100) . substr($htmlCaption, -100));
+				}
+				$original = $htmlCaption;
+				$args = [];
+
+			} else { // Assume array or Iterator
+
+				$slug = null;
+				$original = null;
+				$args = [];
+				foreach ($htmlCaption as $key => $val) {
+					if ($slug === null) {
+						// First item
+						$slug = $key;
+						if (is_int($slug)) {
+							if (strlen($val) <= 200) {
+								$slug = md5($val);
+							} else {
+								$slug = md5(substr($val, 0, 100) . substr($val, -100));
+							}
+						}
+						$original = $val;
+					} else {
+						// Other items
+						$args[] = $val;
+					}
+				}
+			}
+
+
+			$current = $original;
+			if ($slug !== null && isset(YY::$WORLD['SYSTEM']['LANGUAGES'], YY::$WORLD['SYSTEM']['LANGUAGES'][$lang])) {
+				$dict = YY::$WORLD['SYSTEM']['LANGUAGES'][$lang];
+				if (isset($dict[$slug])) {
+					$current = $dict[$slug];
+				}
+			}
+			if (count($args)) {
+				$htmlCaption = vsprintf($current, $args);
+			} else {
+				$htmlCaption = $current;
+			}
+
+			if ($lang) {
+
+				if (isset(YY::$CURRENT_VIEW['TRANSLATOR'])) {
+					$stack = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 7);
+					$trace = md5(print_r($stack, true));
+					$attributes['data-translate-slug'] = $slug;
+					YY::$CURRENT_VIEW['TRANSLATOR']->registerText($trace, $slug, $original, $current);
+				}
+			}
+		}
+		return $htmlCaption;
 	}
 
 }
