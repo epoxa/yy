@@ -11,8 +11,14 @@ services:
       - "443"
     volumes:
       - ./../:/var/www/html
+  chrome:
+    image: robcherry/docker-chromedriver
+    container_name: chrome
+    environment:
+      CHROMEDRIVER_WHITELISTED_IPS:
   tests:
-    image: million12/php-testing
+#    image: million12/php-testing
+    image: test
     links:
       - yy
     container_name: tests

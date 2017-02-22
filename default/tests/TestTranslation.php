@@ -5,10 +5,11 @@ class TestTranslation extends PHPUnit_Extensions_Selenium2TestCase
 
 	protected function setUp()
 	{
-		$this->setBrowser('chrome'); //  Because of firefox "moveto" method error
 //		$this->setBrowser(getenv('YY_TEST_BROWSER')); //  firefox
+		$this->setBrowser('chrome'); //  Because of firefox "moveto" method error
 		$this->setBrowserUrl(getenv('YY_TEST_BASE_URL')); // http://yy.local/
-		$this->setHost(getenv('YY_TEST_SELENIUM_HOST')); // 127.0.0.1
+//		$this->setHost(getenv('YY_TEST_SELENIUM_HOST')); // 127.0.0.1
+		$this->setHost('chrome'); // 127.0.0.1
 		$this->setPort((int)getenv('YY_TEST_SELENIUM_PORT')); // 4444
 	}
 
