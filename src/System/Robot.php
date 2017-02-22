@@ -44,7 +44,22 @@ class Robot extends Data
 		return YY::drawCommand($visual, $htmlCaption, $this, $method, $params);
 	}
 
+	// Alias for HUMAN_COMMAND
+
+	public function CMD($htmlCaption, $method, $params = null, $visual = null)
+	{
+		return YY::drawCommand($visual, $htmlCaption, $this, $method, $params);
+	}
+
 	protected function HUMAN_TEXT($visual, $param_name, $object = null)
+	{
+		if ($object === null) $object = $this;
+		return YY::drawInput($visual, $object, $param_name);
+	}
+
+	// Alias for HUMAN_TEXT
+
+	protected function INPUT($param_name, $object = null, $visual = null)
 	{
 		if ($object === null) $object = $this;
 		return YY::drawInput($visual, $object, $param_name);
@@ -53,6 +68,25 @@ class Robot extends Data
 	protected function MY_TEXT($visual, $htmlText)
 	{
 		return YY::drawText($visual, $htmlText);
+	}
+
+	// Alias for MY_TEXT
+
+	protected function TXT($htmlText, $visual = null)
+	{
+		return YY::drawText($visual, $htmlText);
+	}
+
+	protected function FLAG($visual, $htmlCaption, $param, $method = null)
+	{
+		return YY::drawFlag($visual, $htmlCaption, $this, $param, $method);
+	}
+
+	// Alias for FLAG
+
+	protected function CHK($htmlCaption, $param, $method = null, $visual = null)
+	{
+		return YY::drawFlag($visual, $htmlCaption, $this, $param, $method);
 	}
 
 	public function LINK($visual, $htmlCaption, $params = null)

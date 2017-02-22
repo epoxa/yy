@@ -1,0 +1,12 @@
+sudo: required
+services:
+  - docker
+env:
+  global:
+    - USER=travis
+    - UID=1000
+before_install:
+- cd docker && docker-compose up -d
+- sleep 30
+script:
+- docker-compose exec -T tests /data/vendor/phpunit/phpunit/phpunit -c /data/phpunit.xml

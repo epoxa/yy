@@ -1,0 +1,10 @@
+- name: prepare_nginx
+  service: tests
+  command: sed -e "s/'user www'/'user codeship'/" /etc/nginx/nginx.conf > nginx.conf.tmp && mv nginx.conf.tmp /etc/nginx/nginx.conf
+- name: prepare_phpunit
+  service: tests
+  command: cd /data && composer install
+- name: tests
+  service: tests
+  command: /data/vendor/phpunit/phpunit/phpunit -c /data/phpunit.xml
+

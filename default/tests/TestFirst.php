@@ -29,7 +29,7 @@ class TestFirst extends PHPUnit_Extensions_Selenium2TestCase
 		$this->assertEquals("Hello World", $result);
 // assertText | //div[@id='_YY_0']/div/div[2]/div/div[2]/h2 | To Do
 		$result = $this->byXPath("//div[@id='_YY_0']/div/div[2]/div/div[2]/h2")->text();
-		$this->assertEquals("To Do", $result);
+		$this->assertEquals("To Do List", $result);
 // click | link=Open demo |
 		$this->byLinkText("Open demo")->click();
 // type | id=2[name] | epoxa

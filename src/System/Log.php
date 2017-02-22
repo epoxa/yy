@@ -11,7 +11,7 @@ class Log
 //    'time' => 'profile',
 //    'core' => 'debug',
 //    'import' => 'import',
-//    'system' => 'sys',
+//    'system' => 'sys, debug',
 			'debug' => 'debug, screen',
 			'error' => 'debug, error, screen',
 			'sql' => 'debug',

@@ -1,0 +1,31 @@
+data:
+  build: .
+  dockerfile: docker/data-dockerfile
+  volumes:
+    - ./../:/data
+yy:
+  image: richarvey/nginx-php-fpm:latest
+  container_name: yy
+  environment:
+    WEBROOT: /var/www/html/default/www
+    PUID: 1000
+  expose:
+    - "80"
+    - "443"
+  volumes:
+    - ./../:/var/www/html
+tests:
+  image: million12/php-testing
+  links:
+    - yy
+  container_name: tests
+  environment:
+    YY_TEST_BROWSER: firefox
+    YY_TEST_BASE_URL: http://yy
+    YY_TEST_SELENIUM_HOST: 127.0.0.1
+    YY_TEST_SELENIUM_PORT: 4444
+  volumes_from:
+    - data
+  command: >
+    sed -e "s/'user www'/'user codeship'/" /etc/nginx/nginx.conf > nginx.conf.tmp && mv nginx.conf.tmp /etc/nginx/nginx.conf
+    && cd /data && composer install
