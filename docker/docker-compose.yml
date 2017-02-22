@@ -2,7 +2,6 @@ version: "2"
 services:
   yy:
     image: richarvey/nginx-php-fpm:latest
-    container_name: yy
     environment:
       WEBROOT: /var/www/html/default/www
       PUID: "$UID"
@@ -11,17 +10,30 @@ services:
       - "443"
     volumes:
       - ./../:/var/www/html
-  chrome:
-    image: robcherry/docker-chromedriver
-    container_name: chrome
-    environment:
-      CHROMEDRIVER_WHITELISTED_IPS:
-  tests:
-#    image: million12/php-testing
-    image: test
+  hub:
+    image: selenium/hub
     links:
       - yy
-    container_name: tests
+    environment:
+      CHROMEDRIVER_WHITELISTED_IPS: ""
+    expose:
+      - "4444"
+  chrome:
+    image: selenium/node-chrome
+    links:
+      - yy
+      - hub
+    depends_on:
+      - hub
+    environment:
+      HUB_PORT_4444_TCP_ADDR: hub
+      HUB_PORT_4444_TCP_PORT: 4444
+    entrypoint: ["/bin/sh", "-c", "sleep 3; /opt/bin/entry_point.sh"]
+  tests:
+    image: million12/php-testing
+    links:
+      - yy
+      - hub
     environment:
       YY_TEST_BROWSER: firefox
       YY_TEST_BASE_URL: http://yy
