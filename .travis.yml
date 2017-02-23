@@ -9,4 +9,4 @@ before_install:
 - cd docker && docker-compose up -d
 - sleep 20
 script:
-- docker-compose exec -T tests /data/vendor/phpunit/phpunit/phpunit -c /data/phpunit.xml
+- docker-compose exec -T tests /data/vendor/bin/phpunit -c /data/phpunit.xml
