@@ -14,8 +14,9 @@ class Translation extends Robot
         parent::__construct();
         $this['newLangName'] = '';
         $this['translateMode'] = isset(YY::$CURRENT_VIEW['TRANSLATOR']);
-        if (!isset(YY::$WORLD['SYSTEM']['LANGUAGES'])) {
-            YY::$WORLD['SYSTEM']['LANGUAGES'] = [];
+        if (!isset(YY::$ME['LANGUAGES'])) {
+            YY::$ME['LANGUAGES'] = [];
+            // TODO: Copy current system translations as initial set
         }
     }
 
@@ -24,9 +25,9 @@ class Translation extends Robot
         ?>
         <h3><?= $this->TXT('Current language') ?></h3>
         <div class="btn-group" role="group">
-            <?= $this->drawLangButton(null, !isset(YY::$CURRENT_VIEW['LANGUAGE'])); ?>
-            <?php foreach (YY::$WORLD['SYSTEM']['LANGUAGES'] as $lang => $dummy) : ?>
-                <?= $this->drawLangButton($lang, isset(YY::$CURRENT_VIEW['LANGUAGE']) && YY::$CURRENT_VIEW['LANGUAGE'] === $lang); ?>
+            <?= $this->drawLangButton(null, !isset(YY::$ME['LANGUAGE'])); ?>
+            <?php foreach (YY::$ME['LANGUAGES'] as $lang => $dummy) : ?>
+                <?= $this->drawLangButton($lang, isset(YY::$ME['LANGUAGE']) && YY::$ME['LANGUAGE'] === $lang); ?>
             <?php endforeach; ?>
         </div>
         <?php if (isset($this['add-lang-mode'])) : ?>
@@ -36,15 +37,15 @@ class Translation extends Robot
             <?= $this->CMD('Add New', 'addNewLang', [], ['class' => "btn btn-default"]); ?>
         <?php endif; ?>
         <br>
-        <?php if (isset(YY::$CURRENT_VIEW['LANGUAGE'])) : ?>
-            <?php if (!count(YY::$WORLD['SYSTEM']['LANGUAGES'][YY::$CURRENT_VIEW['LANGUAGE']])) : ?>
+        <?php if (isset(YY::$ME['LANGUAGE'])) : ?>
+            <?php if (!count(YY::$ME['LANGUAGES'][YY::$ME['LANGUAGE']])) : ?>
                 <br>
                 <div class="alert alert-danger">
                     <?= $this->TXT('Selected language does not have a translation at the moment.<br>You can translate any text by clicking red dot while "Translate mode" is on.') ?>
                 </div>
             <?php endif; ?>
             <div class="checkbox">
-            <?= $this->CHK('Translate mode', 'translateMode', 'switchTranslateMode') ?>
+            <?= $this->CHK('Translate mode', 'translateMode', 'updateTranslateMode') ?>
             </div>
         <?php endif; ?>
         <?php
@@ -63,16 +64,16 @@ class Translation extends Robot
     {
         $lang = $_param['lang'];
         if ($lang) {
-            YY::$CURRENT_VIEW['LANGUAGE'] = $lang;
-            YY::$ME['selectedLanguage'] = $lang;
+            YY::$ME['LANGUAGE'] = $lang;
+            YY::$CURRENT_VIEW['TRANSLATION'] = YY::$ME['LANGUAGES'][YY::$ME['LANGUAGE']];
         } else {
             unset(
-                YY::$CURRENT_VIEW['LANGUAGE'],
+                YY::$ME['LANGUAGE'],
                 YY::$CURRENT_VIEW['TRANSLATOR'],
-                YY::$ME['selectedLanguage'],
-                YY::$ME['translateMode'],
-                $this['translateMode']
+                YY::$CURRENT_VIEW['TRANSLATION'],
+                YY::$ME['translateMode']
             );
+            $this['translateMode'] = false;
         }
         $this->closeAddLang();
     }
@@ -87,12 +88,15 @@ class Translation extends Robot
         $lang = trim($this['newLangName']);
         $this->closeAddLang();
         if (!$lang) return;
-        if (!isset(YY::$WORLD['SYSTEM']['LANGUAGES'][$lang])) {
-            YY::$WORLD['SYSTEM']['LANGUAGES'][$lang] = [];
-            if (!$this['translateMode']) $this->switchTranslateMode();
+        if (!isset(YY::$ME['LANGUAGES'][$lang])) {
+            YY::$ME['LANGUAGES'][$lang] = [];
+            if (!$this['translateMode']) {
+                $this['translateMode'] = true;
+                $this->updateTranslateMode();
+            }
         }
-        YY::$CURRENT_VIEW['LANGUAGE'] = $lang;
-        YY::$ME['selectedLanguage'] = $lang;
+        YY::$CURRENT_VIEW['TRANSLATION'] = YY::$ME['LANGUAGES'][$lang];
+        YY::$ME['LANGUAGE'] = $lang;
     }
 
     private function closeAddLang()
@@ -101,7 +105,7 @@ class Translation extends Robot
         $this['newLangName'] = '';
     }
 
-    function switchTranslateMode()
+    function updateTranslateMode()
     {
         if ($this['translateMode']) {
             YY::$CURRENT_VIEW['TRANSLATOR'] = new Agent();

@@ -26,12 +26,10 @@ class Agent extends Robot
 		YY::clientExecute("window.yy_translate_agent.setTranslatorHandle('$myHandle');");
 	}
 
-	function registerText($trace, $slug, $original, $current)
+	function registerTranslatable($trace, $slug, $original)
 	{
-		$this['slugs'][$slug] = [
-			'original' => $original,
-			'current' => $current,
-		];
+		$attributes['data-translate-slug'] = $slug;
+		$this['slugs'][$slug] = $original;
 		$slug = json_encode($slug);
 		YY::clientExecute("window.yy_translate_agent.registerTranslatable($slug);");
 	}
@@ -39,8 +37,8 @@ class Agent extends Robot
 	function showTranslatePrompt($_params)
 	{
 		$slug = $_params['slug'];
-		$original = json_encode($this['slugs'][$slug]['original']);
-		$current = json_encode($this['slugs'][$slug]['current']);
+		$original = json_encode($this['slugs'][$slug]);
+		$current = json_encode(isset(YY::$CURRENT_VIEW['TRANSLATION'][$slug]) ? YY::$CURRENT_VIEW['TRANSLATION'][$slug] : '');
 		$slug = json_encode($slug);
 		YY::clientExecute("window.yy_translate_agent.showTranslatePrompt($slug,$original,$current);");
 	}
@@ -49,10 +47,7 @@ class Agent extends Robot
 	{
 		$slug = $_params['slug'];
 		$translation = $_params['translation'];
-		$lang = YY::$CURRENT_VIEW['LANGUAGE'];
-		if (!isset(YY::$WORLD['SYSTEM']['LANGUAGES'])) YY::$WORLD['SYSTEM']['LANGUAGES'] = [];
-		if (!isset(YY::$WORLD['SYSTEM']['LANGUAGES'][$lang])) YY::$WORLD['SYSTEM']['LANGUAGES'][$lang] = [];
-		YY::$WORLD['SYSTEM']['LANGUAGES'][$lang][$slug] = $translation;
+		YY::$CURRENT_VIEW['TRANSLATION'][$slug] = $translation;
 	}
 
 }

@@ -1105,19 +1105,19 @@ class YY extends Robot // Странно, похоже, такое наслед�
 	 * @param $htmlCaption null|string|array|\Iterator
 	 * @param $attributes
 	 *
-	 * @return mixed
+	 * @return void
 	 *
 	 */
 	protected static function Translate(&$htmlCaption, &$attributes)
 	{
 
-		$lang = isset(self::$CURRENT_VIEW, self::$CURRENT_VIEW['LANGUAGE']) ? self::$CURRENT_VIEW['LANGUAGE'] : null;
+		$translation = isset(self::$CURRENT_VIEW, self::$CURRENT_VIEW['TRANSLATION']) ? self::$CURRENT_VIEW['TRANSLATION'] : null;
 
 		if ($htmlCaption) {
 
 			if (is_string($htmlCaption)) {
 
-				if (!$lang) return $htmlCaption; // Just optimization
+				if (!$translation) return; // Just optimization
 
 				// Make surrogate slug from text
 
@@ -1155,10 +1155,9 @@ class YY extends Robot // Странно, похоже, такое наслед�
 
 
 			$current = $original;
-			if ($slug !== null && isset(YY::$WORLD['SYSTEM']['LANGUAGES'], YY::$WORLD['SYSTEM']['LANGUAGES'][$lang])) {
-				$dict = YY::$WORLD['SYSTEM']['LANGUAGES'][$lang];
-				if (isset($dict[$slug])) {
-					$current = $dict[$slug];
+			if ($slug !== '' && $translation) {
+				if (isset($translation[$slug])) {
+					$current = $translation[$slug];
 				}
 			}
 			if (count($args)) {
@@ -1167,17 +1166,15 @@ class YY extends Robot // Странно, похоже, такое наслед�
 				$htmlCaption = $current;
 			}
 
-			if ($lang) {
-
-				if (isset(YY::$CURRENT_VIEW['TRANSLATOR'])) {
-					$stack = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 7);
-					$trace = md5(print_r($stack, true));
-					$attributes['data-translate-slug'] = $slug;
-					YY::$CURRENT_VIEW['TRANSLATOR']->registerText($trace, $slug, $original, $current);
-				}
+			if (isset(YY::$CURRENT_VIEW['TRANSLATOR'])) {
+				$attributes['data-translate-slug'] = $slug;
+				$stack = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 8);
+				$trace = md5(print_r($stack, true));
+				YY::$CURRENT_VIEW['TRANSLATOR']->registerTranslatable($trace, $slug, $original);
 			}
+
 		}
-		return $htmlCaption;
+
 	}
 
 }

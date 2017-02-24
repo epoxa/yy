@@ -19,8 +19,8 @@ if (isset(YY::$ME['curator'])) {
 
 YY::$CURRENT_VIEW['ROBOT'] = $curator;
 
-if (isset(YY::$ME['selectedLanguage'])) {
-	YY::$CURRENT_VIEW['LANGUAGE'] = YY::$ME['selectedLanguage'];
+if (isset(YY::$ME['LANGUAGE'])) {
+	YY::$CURRENT_VIEW['TRANSLATION'] = YY::$ME['LANGUAGES'][YY::$ME['LANGUAGE']];
 }
 if (isset(YY::$ME['translateMode'])) {
 	YY::$CURRENT_VIEW['TRANSLATOR'] = new Agent();
