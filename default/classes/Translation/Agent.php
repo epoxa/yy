@@ -45,6 +45,7 @@ class Agent extends Robot
 
 	function setTranslation($_params)
 	{
+		// TODO: Filter some html tags
 		$slug = $_params['slug'];
 		$translation = $_params['translation'];
 		YY::$CURRENT_VIEW['TRANSLATION'][$slug] = $translation;

@@ -52,4 +52,9 @@ class Cache
 		YY::Log('core', 'flushed ' . $cnt . ' objects');
 	}
 
+	static public function  GetCount()
+	{
+		return count(self::$dataList);
+	}
+
 }

@@ -11,7 +11,7 @@ use YY\System\Exception\EReloadSignal;
  * @property Data CONFIG
  * @property Data VIEWS
  */
-class YY extends Robot // Странно, похоже, такое наследование позволяет вызвать защищенный метод _PAINT у (другого) экземпляра класса YY\System\YY\System\Robot
+class YY extends Robot // Странно, похоже, такое наследование позволяет вызвать защищенный метод _PAINT у (другого) экземпляра класса YY\System\Robot
 {
 
 	// TODO: Может $WORLD и $ME сделать функциями?
@@ -252,7 +252,19 @@ class YY extends Robot // Странно, похоже, такое наслед�
 
 		$view = null;
 
-		if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+		if (CRON_MODE) {
+
+			self::Log('system', '=========CHILD START=========');
+
+			global $argv;
+			$query = array_slice($argv, 1);
+			parse_str(implode('&', $query), $_GET);
+
+			self::_GET($_GET);
+
+			self::Log('system', '=========CHILD STOP=========');
+
+		} else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
 			if (isset($_GET['who'])) { // В этом случае who содержит код сеанса и дескриптор (внутри сеанся) робота, склеенные через дефис
 
@@ -514,10 +526,15 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		}
 	}
 
-	static private function parseVisual($visual,
-		&$htmlBefore, &$htmlBeforeContent, &$htmlAfterContent, &$htmlAfter, &$attributesText,
-		&$content = null)
-	{
+	static private function parseVisual(
+		$visual,
+		&$htmlBefore,
+		&$htmlBeforeContent,
+		&$htmlAfterContent,
+		&$htmlAfter,
+		&$attributesText,
+		&$content = null
+	) {
 		$htmlBefore = '';
 		$htmlBeforeContent = '';
 		$htmlAfterContent = '';
@@ -1175,6 +1192,21 @@ class YY extends Robot // Странно, похоже, такое наслед�
 
 		}
 
+	}
+
+	///////////////////////////////////
+	//
+	// Translation
+	//
+	///////////////////////////////////
+
+	public static function Async($object, $method)
+	{
+		if (!preg_match("/[0-9A-Za-z]+/", $method)) throw new Exception("Invalid method name: $method");
+		$yyid = $object->_YYID;
+		$cmd = "php $_SERVER[SCRIPT_FILENAME] who=$yyid get=$method > /dev/null &";
+		YY::Log("system", $cmd);
+		exec($cmd, $output, $ret);
 	}
 
 }

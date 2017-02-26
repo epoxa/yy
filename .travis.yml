@@ -5,6 +5,9 @@ env:
   global:
     - USER=travis
     - UID=1000
+  matrix:
+    - YY_TEST_SELENIUM_HOST=127.0.0.1 YY_TEST_BROWSER=firefox
+    - YY_TEST_SELENIUM_HOST=hub YY_TEST_BROWSER=chrome
 before_install:
 - cd docker && docker-compose up -d
 - sleep 20

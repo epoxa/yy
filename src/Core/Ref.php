@@ -71,7 +71,7 @@ class Ref implements Serializable, Iterator, ArrayAccess, Countable
 			return $this->_isOwner;
 		} else return $this->_DAT->$name; // Используйте динамические (интерпретируемые) языки динамично!
 		// Использование свойства, а не индекса массива
-		// позволяет использовать обычные (не динамические) публичные свойства через ссылку YY\System\YY\Core\Ref
+		// позволяет использовать обычные (не динамические) публичные свойства через ссылку \YY\Core\Ref
 		// (например, свойства insertId класса _Sql)
 	}
 
@@ -82,6 +82,8 @@ class Ref implements Serializable, Iterator, ArrayAccess, Countable
 
 	public function __call($_name, $arg)
 	{
+		return call_user_func_array([$this->_DAT, $_name], $arg);
+/*
 		$_result = null;
 		$txt = '$_result = $this->_DAT->' . $_name . '(';
 		for ($idx = 0; $idx < count($arg); $idx++) {
@@ -91,6 +93,7 @@ class Ref implements Serializable, Iterator, ArrayAccess, Countable
 		$txt .= ');';
 		eval($txt);
 		return $_result;
+*/
 		// Может можно и без "eval", через _DATA->call_user_func_array() ?
 	}
 

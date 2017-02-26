@@ -24,6 +24,10 @@ class Demo extends Robot
                 'title' => 'Translation',
                 'description' => "You can translate all these demos by yourself just here in browser. To any language. Really!",
             ],
+            'Async' => [
+                'title' => 'Async execution',
+                'description' => "Do not wait for long time operations",
+            ],
         ];
     }
 
@@ -50,7 +54,7 @@ class Demo extends Robot
                 <div class="container">
                     <div class="row">
                         <?php foreach ($this['examples'] as $class => $info) : ?>
-                            <div class="col-md-4">
+                            <div class="col-md-4" style="min-height: 200px">
                                 <h2><?= $this->TXT($info['title']) ?></h2>
 
                                 <p><?= $this->TXT($info['description']) ?></p>

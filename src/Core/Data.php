@@ -20,8 +20,8 @@ use YY\System\YY;
 
 // TODO: Move error handler to core class
 
-const IGNORE_DBA_ERROR = 'dba_open(/www/vvproject.ru/runtime/data/DATA.db,ct): Driver initialization failed for handler: db4: Unable to establish lock';
-const IGNORE_DBA_ERROR_2 = 'dba_open(/www/vvproject.ru/runtime/data/DATA.db,wdt): Driver initialization failed for handler: db4: Unable to establish lock';
+const IGNORE_DBA_ERROR = 'dba_open(/www/YY/default/runtime/data/DATA.db,wdt): Driver initialization failed for handler: db4: Unable to establish lock';
+const IGNORE_DBA_ERROR_2 = 'dba_open(/www/YY/default/runtime/data/DATA.db,wdt): Driver initialization failed for handler: db4: Unable to establish lock';
 const IGNORE_LUA_ERROR = 'Lua::eval(): corrupted Lua object (1)'; // Единичку в конце я приляпал в исходники php-lua
 
 set_error_handler(function ($errno, $errstr, $errfile, $errline, $errcontext)
@@ -113,6 +113,20 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
 		return DATA_DIR . $YYID . ".yy";
 	}
 
+	static protected function FileGetContentsGracefully($path) {
+		$fo = fopen($path, 'r');
+		$wb = 1;
+		$locked = flock($fo, LOCK_SH, $wb);
+		if (!$locked) {
+			return false;
+		} else {
+			$cts = file_get_contents($path);
+			flock($fo, LOCK_UN);
+			fclose($fo);
+			return $cts;
+		}
+	}
+
 	static public function InitializeStorage($writable = false)
 	{
 		if (!function_exists('dba_handlers') || !in_array(Data::DBA_HANDLER, dba_handlers())) return;
@@ -151,7 +165,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
 		while (($file = readdir($dir)) !== false) {
 			if (substr($file, -3) === '.yy') {
 				$key = substr($file, 0, -3);
-				$data = file_get_contents(DATA_DIR . $file);
+				$data = self::FileGetContentsGracefully(DATA_DIR . $file);
 				if (unlink(DATA_DIR . $file)) {
 					if ($data === '') {
 						dba_delete($key, self::$db);
@@ -196,7 +210,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
 		while (($file = readdir($dir)) !== false) {
 			if (substr($file, -3) === '.yy') {
 				$key = substr($file, 0, -3);
-				$data = file_get_contents(DATA_DIR . $file);
+				$data = self::FileGetContentsGracefully(DATA_DIR . $file);
 				$cnt++;
 				$keySum += strlen($key);
 				$currDataSize = strlen($data);
@@ -383,7 +397,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
 		$fName = self::GetStoredFileName($YYID);
 		try {
 			if (file_exists($fName)) {
-				$stored_data = file_get_contents($fName);
+				$stored_data = self::FileGetContentsGracefully($fName);
 			} else if (self::$db && !!($stored_data = dba_fetch($YYID, self::$db))) {
 			} else {
 				return null;
@@ -756,7 +770,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
 				if (file_exists($persistFileName)) unlink($persistFileName);
 			} else if (self::$db) {
 				// Устанавливаем признак того, что объект удален. Когда база будет доступна на запись, он удалится из базы
-				if (file_exists($persistFileName)) file_put_contents($persistFileName, '');
+				if (file_exists($persistFileName)) file_put_contents($persistFileName, '', LOCK_EX);
 			} else {
 				if (file_exists($persistFileName)) unlink($persistFileName);
 			}
@@ -764,7 +778,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
 			if (file_exists($persistFileName)) unlink($persistFileName);
 			dba_replace($this->YYID, serialize($this), self::$db);
 		} else {
-			file_put_contents($persistFileName, serialize($this));
+			file_put_contents($persistFileName, serialize($this), LOCK_EX);
 		}
 		$this->modified = false; // Чтобы больше не лезть к файлам после промежуточного _flush (если таковые будут)
 		return true;
