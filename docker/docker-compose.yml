@@ -1,46 +1,42 @@
 version: "2"
 services:
-  yy:
-    image: richarvey/nginx-php-fpm:latest
-    environment:
-      WEBROOT: /var/www/html/default/www
-      PUID: "$UID"
-    expose:
-      - "80"
-      - "443"
-    volumes:
-      - ./../:/var/www/html
   hub:
     image: selenium/hub
-    links:
-      - yy
     environment:
       CHROMEDRIVER_WHITELISTED_IPS: ""
     expose:
       - "4444"
-  chrome:
-    image: selenium/node-chrome
+  php:
+    image: bitnami/php-fpm:latest
+    hostname: php
+    environment:
+      YY_TEST_BROWSER: "$YY_TEST_BROWSER"
+      YY_TEST_BASE_URL: http://web
+      YY_TEST_SELENIUM_HOST: "$YY_TEST_SELENIUM_HOST"
+      YY_TEST_SELENIUM_PORT: 4444
     links:
-      - yy
       - hub
-    depends_on:
+    expose:
+      - "9000"
+    volumes:
+      - ./..:/app
+  web:
+    image: bitnami/nginx:latest
+    hostname: web
+    links:
+      - php
+    expose:
+      - "80"
+      - "443"
+    volumes:
+      - ./yy.nginx.conf:/bitnami/nginx/conf/vhosts/yy.conf
+      - ./..:/app
+  node:
+    image: "selenium/node-$YY_TEST_BROWSER"
+    links:
+      - web
       - hub
     environment:
       HUB_PORT_4444_TCP_ADDR: hub
       HUB_PORT_4444_TCP_PORT: 4444
     entrypoint: ["/bin/sh", "-c", "sleep 3; /opt/bin/entry_point.sh"]
-  tests:
-    image: million12/php-testing
-    links:
-      - yy
-      - hub
-    environment:
-      YY_TEST_BROWSER: firefox
-      YY_TEST_BASE_URL: http://yy
-      YY_TEST_SELENIUM_HOST: 127.0.0.1
-      YY_TEST_SELENIUM_PORT: 4444
-    volumes:
-      - ./../:/data
-    command: >
-      sed -e "s/'user www'/'user ${USER}'/" /etc/nginx/nginx.conf > nginx.conf.tmp && mv nginx.conf.tmp /etc/nginx/nginx.conf
-      && cd /data && composer install

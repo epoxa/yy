@@ -3,9 +3,9 @@ data:
   dockerfile: docker/data-dockerfile
   volumes:
     - ./../:/data
-yy:
+web:
   image: richarvey/nginx-php-fpm:latest
-  container_name: yy
+  container_name: web
   environment:
     WEBROOT: /var/www/html/default/www
     PUID: 1000
@@ -17,11 +17,11 @@ yy:
 tests:
   image: million12/php-testing
   links:
-    - yy
+    - nginx
   container_name: tests
   environment:
     YY_TEST_BROWSER: firefox
-    YY_TEST_BASE_URL: http://yy
+    YY_TEST_BASE_URL: http://web
     YY_TEST_SELENIUM_HOST: 127.0.0.1
     YY_TEST_SELENIUM_PORT: 4444
   volumes_from:
