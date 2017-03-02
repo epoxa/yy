@@ -74,7 +74,9 @@ class YY extends Robot // Странно, похоже, такое наслед�
 			self::$WORLD = new Data($init);
 			self::$WORLD->_REF; // Lock in persistent storage
 			Importer::reloadWorld();
-			mkdir(DATA_DIR, 0777, true);
+            if (!file_exists(DATA_DIR)) {
+                mkdir(DATA_DIR, 0777, true);
+            }
 			file_put_contents($fname, self::$WORLD->_YYID);
 			YY::Log('system', 'World created!');
 			if (!file_exists(SESSIONS_DIR)) {

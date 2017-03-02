@@ -11,13 +11,14 @@ class Log
 //    'time' => 'profile',
 //    'core' => 'debug',
 //    'import' => 'import',
-    'system' => 'sys, debug',
+//    'system' => 'sys, debug',
 			'debug' => 'debug, screen',
 			'error' => 'debug, error, screen',
 			'sql' => 'debug',
 			'gatekeeper' => 'debug, gatekeeper',
 		);
 
+    static private $disabled = false;
 	static private $logDir = LOG_DIR;
 	static private $screenDebugText = '';
 	static private $started = null;
@@ -28,6 +29,7 @@ class Log
 
 	static public function Log($kind, $message)
 	{
+        if (self::$disabled) return;
 		$now = microtime(true);
 		if (self::$started === null) {
 			self::$started = $now;
@@ -99,6 +101,7 @@ class Log
 
 	static public function finalize()
 	{
+        if (self::$disabled) return;
 		// Оптимизация на случай отсутствия протоколов в этом запросе
 		if (self::$started === null) return;
 		// Сбрасываем на диск буферизованые логи
@@ -135,6 +138,11 @@ class Log
 			self::directWrite('debug', '--------------------');
 		}
 	}
+
+    static public function Disable()
+    {
+        self::$disabled = true;
+    }
 
 	static protected function screenCheck()
 	{
