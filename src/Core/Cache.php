@@ -36,9 +36,11 @@ class Cache
 	static public function Flush($intermediate = true)
 	{
 		YY::Log('core', 'flush started');
-		foreach (self::$dataList as $data) {
-			$data->_delete_if_unasigned();
-		}
+        if (!$intermediate) {
+            foreach (self::$dataList as $data) {
+                $data->_delete_if_unasigned();
+            }
+        }
 		$cnt = 0;
 		Data::InitializeStorage(true);
 		// TODO: По идее в момент сохранения нельзя использовать объекты (а они используются, например, в протоколировании)

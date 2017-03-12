@@ -69,7 +69,13 @@ class Ref implements Serializable, Iterator, ArrayAccess, Countable
 			return $this->get_EMPTY();
 		} else if ($name === '_OWNER') {
 			return $this->_isOwner;
-		} else return $this->_DAT->$name; // Используйте динамические (интерпретируемые) языки динамично!
+		} else {
+            $val = $this->get_DAT()->$name; // Используйте динамические (интерпретируемые) языки динамично!
+            if ($val instanceof Ref) {
+                if (!$val->_DAT) $val = null;
+            }
+            return $val;
+        }
 		// Использование свойства, а не индекса массива
 		// позволяет использовать обычные (не динамические) публичные свойства через ссылку \YY\Core\Ref
 		// (например, свойства insertId класса _Sql)
@@ -82,7 +88,11 @@ class Ref implements Serializable, Iterator, ArrayAccess, Countable
 
 	public function __call($_name, $arg)
 	{
-		return call_user_func_array([$this->_DAT, $_name], $arg);
+        $dat = $this->_DAT;
+        if (!$dat) {
+            throw new Exception("Call method $_name(" . ($arg ? print_r($arg, true) : '') . ") of deleted object.");
+        }
+		return call_user_func_array([$dat, $_name], $arg);
 /*
 		$_result = null;
 		$txt = '$_result = $this->_DAT->' . $_name . '(';

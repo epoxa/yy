@@ -66,7 +66,6 @@ class Runner extends Robot
 
     function start()
     {
-        $this->updateState();
         if (isset($this['PID'])) {
             if (posix_kill($this['PID'], 0)) {
                 return; // Still running

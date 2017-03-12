@@ -12,6 +12,7 @@ define('CONFIGS_DIR', ROOT_DIR . 'config/');
 define('DATA_DIR', ROOT_DIR .'runtime/data/');
 define('LOG_DIR', ROOT_DIR . 'runtime/log/');
 define('SESSIONS_DIR', ROOT_DIR . 'runtime/sessions/');
+define('WEB_DIR', ROOT_DIR . 'www/');
 define('FILES_DIR', ROOT_DIR . 'www/files/');
 
 if (!CRON_MODE) {

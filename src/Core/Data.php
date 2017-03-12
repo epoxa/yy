@@ -20,16 +20,17 @@ use YY\System\YY;
 
 // TODO: Move error handler to core class
 
-const IGNORE_DBA_ERROR = 'dba_open(/www/YY/default/runtime/data/DATA.db,wdt): Driver initialization failed for handler: db4: Unable to establish lock';
-const IGNORE_DBA_ERROR_2 = 'dba_open(/www/YY/default/runtime/data/DATA.db,wdt): Driver initialization failed for handler: db4: Unable to establish lock';
-const IGNORE_LUA_ERROR = 'Lua::eval(): corrupted Lua object (1)'; // Единичку в конце я приляпал в исходники php-lua
+const IGNORE_DBA_ERROR_TAIL = 'db4: Unable to establish lock';
+const IGNORE_LUA_ERROR_HEAD = 'Lua::eval(): corrupted Lua object';
 
 set_error_handler(function ($errno, $errstr, $errfile, $errline, $errcontext)
 {
-	if ($errstr === IGNORE_DBA_ERROR) return false;
-	if ($errstr === IGNORE_DBA_ERROR_2) return false;
-	if ($errstr === IGNORE_LUA_ERROR) return false;
-	if ($errno != E_NOTICE) {
+    if (
+        substr($errstr, -strlen(IGNORE_DBA_ERROR_TAIL)) === IGNORE_DBA_ERROR_TAIL
+        || substr($errstr, 0, strlen(IGNORE_LUA_ERROR_HEAD)) === IGNORE_LUA_ERROR_HEAD
+    ) {
+        // Just skip these known warnings
+    } else if ($errno != E_NOTICE) {
 		$msg = $errno . ': ' . $errfile . "(" . $errline . ")" . "\n" . $errstr;
 		YY::Log('error', $msg);
 		if (isset(YY::$WORLD, YY::$WORLD['SYSTEM'], YY::$WORLD['SYSTEM']['error'])) {
@@ -408,8 +409,8 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
 		try {
 			$stored_data = @unserialize($stored_data);
 		} catch (Exception $e) {
-			$stored_data = null;
-			YY::Log('error', $YYID . ' - load failed: ' . $e->getMessage());
+            YY::Log('error', $YYID . ' - load failed: ' . print_r($stored_data, true) . "\n" . $e->getMessage());
+            $stored_data = null;
 		}
 		if ($stored_data instanceof __PHP_Incomplete_Class) {
 			$stored_data = null;

@@ -58,6 +58,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 	static public function LoadWorld()
 	{
 		if (isset(self::$WORLD)) return;
+        Data::InitializeStorage();
 		$fname = DATA_DIR . "world.id";
 		if (file_exists($fname)) {
 			$world_id = file_get_contents($fname);
@@ -242,8 +243,6 @@ class YY extends Robot // Странно, похоже, такое наслед�
 
 	static public function Run()
 	{
-		Data::InitializeStorage();
-
 		self::Log(['time', 'system'], '============START============');
 
 		self::LoadWorld();
@@ -685,8 +684,8 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		$id = $handle . '[#' . $param . ']';
 		$action = $method ? ";go($handle,\"$method\")" : '';
 		$checked = isset($robot[$param]) && $robot[$param] ? ' checked' : '';
-		$element = "<input$attributesText$checked type='checkbox' name='$id' id='$id' onclick='changed(this)$action; return false;'>";
-		return "$htmlBefore<label for='$id'>$element$htmlBeforeContent$htmlCaption$htmlAfterContent</label>$htmlAfter";
+		$element = "<input$checked type='checkbox' name='$id' id='$id' onclick='changed(this)$action; return false;'>";
+		return "$htmlBefore<label$attributesText for='$id'>$htmlBeforeContent$element&nbsp;$htmlCaption$htmlAfterContent</label>$htmlAfter";
 	}
 
 	static public function drawInternalLink($visual, $htmlCaption, $robot, $params = null)
@@ -1134,7 +1133,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 
 		if ($htmlCaption) {
 
-			if (is_string($htmlCaption)) {
+			if (is_scalar($htmlCaption)) {
 
 				if (!$translation) return; // Just optimization
 
@@ -1198,7 +1197,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 
 	///////////////////////////////////
 	//
-	// Translation
+	// Async method execution
 	//
 	///////////////////////////////////
 
@@ -1206,7 +1205,8 @@ class YY extends Robot // Странно, похоже, такое наслед�
 	{
 		if (!preg_match("/[0-9A-Za-z]+/", $method)) throw new Exception("Invalid method name: $method");
 		$yyid = $object->_YYID;
-		$cmd = "php $_SERVER[SCRIPT_FILENAME] who=$yyid get=$method > /dev/null &";
+        $entry = CRON_MODE ? WEB_DIR . 'index.php' : $_SERVER['SCRIPT_FILENAME'];
+		$cmd = "php $entry who=$yyid get=$method > /dev/null &";
 		YY::Log("system", $cmd);
 		exec($cmd, $output, $ret);
 	}
