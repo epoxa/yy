@@ -2,9 +2,10 @@ version: 2
 jobs:
   build:
     working_directory: ~/yy
-    machine:
-      enabled: true
+    docker:
+      - image: circleci/build-image:ubuntu-14.04-XXL-927-41cd8fe
     steps:
+      - setup_docker_engine
       - checkout
       - run:
           command: |
