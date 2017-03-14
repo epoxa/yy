@@ -1,18 +1,18 @@
-machine:
-  pre:
-    - curl -sSL https://s3.amazonaws.com/circle-downloads/install-circleci-docker.sh | bash -s -- 1.10.0
-  services:
-    - docker
-
-dependencies:
-  override:
-    - pip install
-    - pip install docker docker-compose
-    - pip install --upgrade six # fix error with docker-compose
-    - cd docker && docker-compose up -d
-    - sleep 30
-
-test:
-  override:
-    - cd docker && docker-compose exec -T tests /data/vendor/phpunit/phpunit/phpunit -c /data/phpunit.xml
-
+version: 2
+jobs:
+  build:
+    working_directory: ~/yy
+    machine:
+      enabled: true
+    steps:
+      - checkout
+      - run:
+          command: |
+            mkdir -p default/runtime/log && chmod a+rwX -R default/runtime && \
+            cd docker && docker-compose up -d && \
+            sleep 20 && \
+            docker-compose ps && \
+            docker-compose logs php && \
+            docker-compose exec -T php sh -c "curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer" && \
+            docker-compose exec -T php composer update && \
+            docker-compose exec -T php vendor/bin/phpunit
