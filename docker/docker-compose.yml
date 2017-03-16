@@ -1,0 +1,28 @@
+version: "2"
+services:
+  php:
+    image: bitnami/php-fpm:latest
+    hostname: php
+    environment:
+      YY_TEST_BROWSER: "$YY_TEST_BROWSER"
+      YY_TEST_BASE_URL: http://web
+      YY_TEST_SELENIUM_HOST: "$YY_TEST_SELENIUM_HOST"
+      YY_TEST_SELENIUM_PORT: 4444
+    expose:
+      - "9000"
+    volumes:
+      - ./..:/app
+  web:
+    image: bitnami/nginx:latest
+    hostname: web
+    links:
+      - php
+    expose:
+      - "80"
+      - "443"
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./yy.nginx.conf:/bitnami/nginx/conf/vhosts/yy.conf
+      - ./..:/app

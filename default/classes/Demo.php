@@ -29,7 +29,7 @@ class Demo extends Robot
                 'description' => "You can translate all these demos by yourself just here in browser. To any language. Really!",
             ],
             'Async' => [
-                'title' => 'Async execution',
+                'title' => 'Async Execution',
                 'description' => "Do not wait for long time operations",
             ],
         ];
@@ -87,7 +87,7 @@ class Demo extends Robot
 
                         <p><?= $this->TXT($this['current']['description']) ?></p>
 
-                        <p><?= $this->CMD('<kbd class="text-muted bg-primary small">Esc</kbd> &nbsp;Back to list', 'index', [], ['id' => 'show-index', 'class' => ['btn', 'btn-info', 'yy-skip'], 'role' => 'button']) ?></p>
+                        <p><?= $this->CMD('<kbd class="text-muted bg-primary small">Esc</kbd> &nbsp;Back to index', 'index', [], ['id' => 'show-index', 'class' => ['btn', 'btn-info', 'yy-skip'], 'role' => 'button']) ?></p>
                     </div>
                 </div>
 

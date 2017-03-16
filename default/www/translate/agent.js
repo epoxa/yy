@@ -35,10 +35,12 @@
         }
         console.info('registerTranslatable: ');
         $('*[data-translate-slug="' + md5slug + '"]').hover(
-            function () {
+            function (e) {
                 var p = $(this).offset();
                 $translatorIndicator.css('right', $('body').width() - p.left - $(this).outerWidth() - 4).css('top', p.top - 4).stop(true, true).show();
                 $translatorIndicator.element = this;
+                e.stopPropagation();
+                return false;
             },
             function (event) {
                 if ($(event.relatedTarget)[0] != $translatorIndicator[0]) $translatorIndicator.fadeOut(1200);

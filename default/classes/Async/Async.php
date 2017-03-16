@@ -18,12 +18,15 @@ class Async extends Robot
         ]);
         $this['include'] = "<script src='/demo/async/async.js'></script>";
         $this['runners'][] = new Runner([
+            'id' => 'runner-1',
             'amount' => 0,
         ]);
         $this['runners'][] = new Runner([
+            'id' => 'runner-2',
             'amount' => 0,
         ]);
         $this['runners'][] = new Runner([
+            'id' => 'runner-3',
             'amount' => 0,
         ]);
     }

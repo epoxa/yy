@@ -14,20 +14,22 @@ class Runner extends Robot
     protected function _PAINT()
     {
         ?>
-        <div class="panel panel-default">
+        <div class="panel panel-default" id="<?= $this['id'] ?>">
             <div class="panel-body">
                 <div class="row">
                     <div class="col-md-1">
                         <div class="btn-group" role="group">
                             <?= $this->CMD(
-                                ['' => isset($this['PID']) ?
-                                    '<span class="glyphicon glyphicon-pause"></span>'
-                                    : '<span class="glyphicon glyphicon-play"></span>'
+                                [
+                                    '' => isset($this['PID']) ?
+                                        '<span class="glyphicon glyphicon-pause"></span>'
+                                        : '<span class="glyphicon glyphicon-play"></span>',
                                 ],
                                 'toggle', null,
-                                ['class' => isset($this['PID']) ?
-                                    "btn btn-warning"
-                                    : "btn btn-success"
+                                [
+                                    'class' => isset($this['PID']) ?
+                                        "btn btn-warning"
+                                        : "btn btn-success",
                                 ]) ?>
                         </div>
                     </div>
@@ -82,9 +84,12 @@ class Runner extends Robot
         $this['PID'] = getmypid();
         $this['startAmount'] = $this['amount'];
         $this['startTime'] = time();
-        if (!pcntl_signal(SIGTERM, function($sig, $siginfo) {
+        if (!pcntl_signal(SIGTERM, function ($sig, $siginfo) {
             $this['stop'] = true;
-        })) return;
+        })
+        ) {
+            return;
+        }
         while (time() - $this['startTime'] < 1800 && !isset($this['stop'])) {
             $this->execute();
             Cache::Flush();
@@ -94,7 +99,8 @@ class Runner extends Robot
         $this['speed'] = 0;
     }
 
-    function execute() {
+    function execute()
+    {
         $this['amount'] = $this['amount'] + 1;
         $timeDelta = time() - $this['startTime'];
         $this['time'] = $timeDelta;
