@@ -17,8 +17,12 @@ class Demo extends Robot
                 'description' => "This is a very basic example. Meet user interaction principles in YY.",
             ],
             'Todo' => [
-                'title' => 'To Do List',
-                'description' => "A simple todo organizer. It does not utilize any external database engine or other kind of special data storage. All the data are stored inside of child robots as theirs plain properties.",
+                'title' => 'Simple To Do List',
+                'description' => "A simple todo organizer. It does not utilize any external database engine or other kind of special data storage. All the data are stored inside of plain robot properties.",
+            ],
+            'AdvancedTodo' => [
+                'title' => 'Advanced To Do List',
+                'description' => "A bit more complicated todo manager. Consists of main application class and separate child robots for every todo item. See comments in source code.",
             ],
             'Translation' => [
                 'title' => 'Translation',
@@ -29,13 +33,23 @@ class Demo extends Robot
                 'description' => "Do not wait for long time operations",
             ],
         ];
+
+        $script = "$(document).keypress(function(e) {if (e.keyCode == 27) $('#show-index:visible').click() })";
+        $this->includeAsset("<script>$script</script>");
+
+        $this->includeAsset("<script src='/js/common.js'></script>");
+
+        YY::clientExecute('ensureFocus()');
+
     }
 
     function _PAINT()
     {
         ?>
 
-        <?= $this->CMD('reboot', 'reboot', [], ['style' => 'position: fixed; right: 0']) ?>
+        <?php if ($_SERVER['REMOTE_ADDR'] === '127.0.0.1') : ?>
+            <?= $this->CMD('reboot', 'reboot', [], ['class' => 'yy-skip', 'style' => 'position: fixed; right: 0']) ?>
+        <?php endif; ?>
 
         <div class="container">
 
@@ -51,19 +65,19 @@ class Demo extends Robot
                     </div>
                 </div>
 
-                <div class="container">
-                    <div class="row">
+                    <div style="display: flex; flex-wrap: wrap">
                         <?php foreach ($this['examples'] as $class => $info) : ?>
-                            <div class="col-md-4" style="min-height: 200px">
-                                <h2><?= $this->TXT($info['title']) ?></h2>
-
-                                <p><?= $this->TXT($info['description']) ?></p>
-
-                                <p><?= $this->CMD('Open demo', 'run', ['class' => $class], ['class' => ['btn', 'btn-info'], 'role' => 'button']) ?></p>
+                            <div class="col-md-4 col-sm-6 col-xs-12" style="padding: 0.5cm">
+                                <?= $this->CMD(
+                                    $this->TXT($info['title'], ['before' => '<h3>', 'after' => '</h3>'])
+                                    .
+                                    $this->TXT($info['description'], ['style' => 'color: gray'])
+                                    ,
+                                    'run', ['class' => $class], ['class' => 'thumbnail', 'style' => 'height: 100%; padding: 0 0.5cm; text-decoration: none!important; color: black; width: 100%']
+                                ) ?>
                             </div>
                         <?php endforeach; ?>
                     </div>
-                </div>
 
             <?php else : ?>
 
@@ -73,7 +87,7 @@ class Demo extends Robot
 
                         <p><?= $this->TXT($this['current']['description']) ?></p>
 
-                        <p><?= $this->CMD('Back to list', 'index', [], ['class' => ['btn', 'btn-info'], 'role' => 'button']) ?></p>
+                        <p><?= $this->CMD('<kbd class="text-muted bg-primary small">Esc</kbd> &nbsp;Back to list', 'index', [], ['id' => 'show-index', 'class' => ['btn', 'btn-info', 'yy-skip'], 'role' => 'button']) ?></p>
                     </div>
                 </div>
 
@@ -81,8 +95,9 @@ class Demo extends Robot
 
             <?php endif; ?>
 
-            <hr>
-            <footer class="text-center">
+
+            <footer class="text-center col-md-12 col-sm-12">
+                <hr>
                 <p><?= $this->TXT(['&copy; 2016-%s epoxa', date('Y')]) ?></p>
             </footer>
 
@@ -107,11 +122,13 @@ class Demo extends Robot
             $info['robot'] = $demo;
         }
         $this['current'] = $info;
+        YY::clientExecute('ensureFocus()');
     }
 
     function index()
     {
         unset($this['current']);
+        YY::clientExecute('ensureFocus()');
     }
 
     function reboot()

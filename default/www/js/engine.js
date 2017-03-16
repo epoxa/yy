@@ -1,3 +1,5 @@
+var controlToFocus = null;
+
 (function() {
 
     var blind = null;
@@ -99,7 +101,6 @@
     var loadScrips = [];
     var loadingCount;
     var inlineTailScript = null;
-    var controlToFocus = null;
 
     function received(changes) {
         var hasVisualChages = false;

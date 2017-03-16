@@ -31,8 +31,14 @@ class Translation extends Robot
             <?php endforeach; ?>
         </div>
         <?php if (isset($this['add-lang-mode'])) : ?>
-            <?= $this->INPUT('newLangName'); ?>
-            <?= $this->CMD('Save', 'saveNewLang', [], ['class' => "btn btn-default"]); ?>
+        <form class="col-md-2" style="display: inline-block; float: none; position: relative; top: 13px" onsubmit="$('#lang-ok').click(); return false;">
+            <div class="input-group">
+                <?= $this->INPUT('newLangName', null, ['class' => 'form-control']); ?>
+                <div class="input-group-btn">
+                    <?= $this->CMD('Save', 'saveNewLang', [], ['id' => 'lang-ok', 'class' => "btn btn-default"]); ?>
+                </div>
+            </div>
+        </form>
         <?php else: ?>
             <?= $this->CMD('Add New', 'addNewLang', [], ['class' => "btn btn-default"]); ?>
         <?php endif; ?>
@@ -81,6 +87,7 @@ class Translation extends Robot
     function addNewLang()
     {
         $this['add-lang-mode'] = true;
+        $this->focusControl('newLangName');
     }
 
     function saveNewLang()

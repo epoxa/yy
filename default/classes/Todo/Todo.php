@@ -12,58 +12,43 @@ class Todo extends Robot
 	{
 		parent::__construct();
 
-        //////////////////////////////
-        //
-        // Data will be arranged here
-        //
-        //////////////////////////////
-
-        // A text of a new item
-
-		$this['text'] = '';
-
-        // All of the existing items
+		$this['new-text'] = '';
 
 		$this['list'] = [];
-
-        //////////////////////////////
-        //
-        // Visual representation
-        //
-        //////////////////////////////
-
-        // This to-do-robot will be rendered inside a <div> element on the html page
-        // You can adjust the div attributes such a way
-
-		$this['attributes'] = [
-            'class' => 'todoapp',
-        ];
-
-        // This will be included in page header. Only once.
-        // Can be a plain string or array of strings or even recursive YY\Data tree containing strings.
-
-        $this['include'] = '<link rel="stylesheet" href="/demo/todo/todo.css">';
-
     }
 
 	function _PAINT()
 	{
 		?>
-		<form onsubmit="go(<?= YY::GetHandle($this) ?>, 'add'); return false;">
-			<?= YY::drawInput([], $this, 'text') ?>
-			<?= YY::drawCommand(['class' => ['btn', 'btn-default', 'btn-small']], 'Add', $this, 'add') ?>
-		</form>
-		<?php foreach($this['list'] as $item) : ?>
-		<div>
-			<?= htmlspecialchars($item) ?>
-		</div>
-		<?php endforeach; ?>
+        <div class="col-md-offset-3 col-md-6 col-sm-offset-2 col-sm-8">
+            <form onsubmit="go(<?= YY::GetHandle($this) ?>, 'add'); return false;">
+                <div class="input-group">
+                    <?= $this->INPUT('new-text', null, ['class' => 'form-control']) ?>
+                    <div class="input-group-btn">
+                        <?= $this->CMD('Add', 'add', null, ['class' => ['btn', 'btn-primary']]) ?>
+                    </div>
+                </div>
+            </form>
+
+            <br>
+            <div class="list-group">
+                <?php foreach($this['list'] as $index => $item) : ?>
+                    <?= $this->CMD($item, 'remove', ['index' => $index], ['class' => 'list-group-item']) ?>
+                <?php endforeach; ?>
+            </div>
+        </div>
 		<?php
 	}
 
 	function add() {
-		$this['list'][] = $this['text'];
-		$this['text'] = '';
+		$this['list'][] = $this['new-text'];
+		$this['new-text'] = '';
+        $this->focusControl('new-text');
+	}
+
+	function remove($_params) {
+		unset($this['list'][$_params['index']]);
+        $this->focusControl('new-text');
 	}
 
 }
