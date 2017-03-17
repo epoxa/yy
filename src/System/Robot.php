@@ -70,19 +70,46 @@ class Robot extends Data
 	{
 	}
 
-	// Функция может быть вызвана (прямо или через _SHOW дочерних роботов) только в процедуре _SHOW экземпляра наследника этого класса.
-	// Задает континуацию, срабатывающую после окончания текущего метода и соответствующего ответа пользователя.
 
+	/**
+	 * @deprecated
+	 *
+	 * @param      $visual
+	 * @param      $htmlCaption
+	 * @param      $method
+	 * @param null $params
+	 *
+	 * @return string
+	 */
 	public function HUMAN_COMMAND($visual, $htmlCaption, $method, $params = null)
 	{
 		return YY::drawCommand($visual, $htmlCaption, $this, $method, $params);
 	}
 
-	// Alias for HUMAN_COMMAND
+	// Alternative for deprecated HUMAN_COMMAND
 
-	public function CMD($htmlCaption, $method, $params = null, $visual = null)
+	public function CMD($htmlCaption, $methodAndParams = null, $visual = null)
 	{
-		return YY::drawCommand($visual, $htmlCaption, $this, $method, $params);
+		$object = $this;
+		$method = null;
+		$params = [];
+		if (is_string($methodAndParams)) {
+			$method = $methodAndParams;
+		} elseif ($methodAndParams) {
+			foreach($methodAndParams as $key => $value) {
+				if ($method === null) {
+					if (is_string($value)) {
+						$method = $value;
+					} else {
+						$object = $value[0];
+						$method = $value[1];
+					}
+				} else {
+					$params[$key] = $value;
+				}
+			}
+		}
+		return YY::drawCommand($visual, $htmlCaption, $object, $method, $params);
 	}
 
 	protected function HUMAN_TEXT($visual, $param_name, $object = null)

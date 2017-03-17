@@ -48,7 +48,7 @@ class Demo extends Robot
         ?>
 
         <?php if ($_SERVER['REMOTE_ADDR'] === '127.0.0.1') : ?>
-            <?= $this->CMD('reboot', 'reboot', [], ['class' => 'yy-skip', 'style' => 'position: fixed; right: 0']) ?>
+            <?= $this->CMD('reboot', 'reboot', ['class' => 'yy-skip', 'style' => 'position: fixed; right: 0']) ?>
         <?php endif; ?>
 
         <div class="container">
@@ -79,7 +79,10 @@ class Demo extends Robot
                                         .
                                         $this->TXT($info['description'], ['style' => 'color: gray']),
                                 ],
-                                'run', ['class' => $class],
+                                [
+                                    'run',
+                                    'class' => $class
+                                ],
                                 [
                                     'class' => 'thumbnail',
                                     'style' => 'height: 100%; padding: 0 0.5cm; text-decoration: none!important; color: black; width: 100%',
@@ -97,7 +100,7 @@ class Demo extends Robot
 
                         <p><?= $this->TXT($this['current']['description']) ?></p>
 
-                        <p><?= $this->CMD('<kbd class="text-muted bg-primary small">Esc</kbd> &nbsp;Back to index', 'index', [],
+                        <p><?= $this->CMD('<kbd class="text-muted bg-primary small">Esc</kbd> &nbsp;Back to index', 'index',
                                 ['id' => 'show-index', 'class' => ['btn', 'btn-info', 'yy-skip'], 'role' => 'button']) ?></p>
                     </div>
                 </div>

@@ -25,7 +25,7 @@ class Runner extends Robot
                                         '<span class="glyphicon glyphicon-pause"></span>'
                                         : '<span class="glyphicon glyphicon-play"></span>',
                                 ],
-                                'toggle', null,
+                                'toggle',
                                 [
                                     'class' => isset($this['PID']) ?
                                         "btn btn-warning"

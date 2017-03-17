@@ -35,12 +35,12 @@ class Translation extends Robot
             <div class="input-group">
                 <?= $this->INPUT('newLangName', null, ['class' => 'form-control']); ?>
                 <div class="input-group-btn">
-                    <?= $this->CMD('Save', 'saveNewLang', [], ['id' => 'lang-ok', 'class' => "btn btn-default"]); ?>
+                    <?= $this->CMD('Save', 'saveNewLang', ['id' => 'lang-ok', 'class' => "btn btn-default"]); ?>
                 </div>
             </div>
         </form>
         <?php else: ?>
-            <?= $this->CMD('Add New', 'addNewLang', [], ['class' => "btn btn-default"]); ?>
+            <?= $this->CMD('Add New', 'addNewLang', ['class' => "btn btn-default"]); ?>
         <?php endif; ?>
         <br>
         <?php if (isset(YY::$ME['LANGUAGE'])) : ?>
@@ -61,7 +61,7 @@ class Translation extends Robot
     {
         return $this->CMD(
             $lang ?: 'Original', // Button caption
-            'switchLang', ['lang' => $lang], // Handler
+            ['switchLang', 'lang' => $lang], // Handler
             ['class' => $active ? "btn btn-primary" : "btn btn-default"] // Visual style
         );
     }

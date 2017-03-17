@@ -25,7 +25,7 @@ class Todo extends Robot
                 <div class="input-group">
                     <?= $this->INPUT('new-text', null, ['class' => 'form-control']) ?>
                     <div class="input-group-btn">
-                        <?= $this->CMD('Add', 'add', null, ['class' => ['btn', 'btn-primary']]) ?>
+                        <?= $this->CMD('Add', 'add', ['class' => ['btn', 'btn-primary']]) ?>
                     </div>
                 </div>
             </form>
@@ -33,7 +33,7 @@ class Todo extends Robot
             <br>
             <div class="list-group">
                 <?php foreach($this['list'] as $index => $item) : ?>
-                    <?= $this->CMD(['' => $item], 'remove', ['index' => $index], ['class' => 'list-group-item']) ?>
+                    <?= $this->CMD(['' => $item], ['remove', 'index' => $index], ['class' => 'list-group-item']) ?>
                 <?php endforeach; ?>
             </div>
         </div>
