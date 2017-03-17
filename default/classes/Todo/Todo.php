@@ -33,7 +33,7 @@ class Todo extends Robot
             <br>
             <div class="list-group">
                 <?php foreach($this['list'] as $index => $item) : ?>
-                    <?= $this->CMD($item, 'remove', ['index' => $index], ['class' => 'list-group-item']) ?>
+                    <?= $this->CMD(['' => $item], 'remove', ['index' => $index], ['class' => 'list-group-item']) ?>
                 <?php endforeach; ?>
             </div>
         </div>

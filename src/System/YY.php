@@ -1184,7 +1184,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 				$htmlCaption = $current;
 			}
 
-			if (isset(YY::$CURRENT_VIEW['TRANSLATOR'])) {
+			if ($slug !== '' && isset(YY::$CURRENT_VIEW['TRANSLATOR'])) {
 				$attributes['data-translate-slug'] = $slug;
 				$stack = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 8);
 				$trace = md5(print_r($stack, true));

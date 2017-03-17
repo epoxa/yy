@@ -59,25 +59,35 @@ class Demo extends Robot
                     <div class="container">
                         <h1><?= $this->TXT('YY Demo') ?></h1>
 
-                        <p><?= $this->TXT(['Hi, %s! Here are some examples of using YY engine.<br>You
+                        <p>
+                            <?= $this->TXT([
+                                'Hi, %s! Here are some examples of using YY engine.<br>You
                             can use any of these as a start point to build your own application.',
-                                empty(YY::$ME['name']) ? 'stranger' : htmlspecialchars(YY::$ME['name']) ]) ?></p>
+                                empty(YY::$ME['name']) ? 'stranger' : htmlspecialchars(YY::$ME['name']),
+                            ]) ?>
+                        </p>
                     </div>
                 </div>
 
-                    <div style="display: flex; flex-wrap: wrap">
-                        <?php foreach ($this['examples'] as $class => $info) : ?>
-                            <div class="col-md-4 col-sm-6 col-xs-12" style="padding: 0.5cm">
-                                <?= $this->CMD(
-                                    $this->TXT($info['title'], ['before' => '<h3>', 'after' => '</h3>'])
-                                    .
-                                    $this->TXT($info['description'], ['style' => 'color: gray'])
-                                    ,
-                                    'run', ['class' => $class], ['class' => 'thumbnail', 'style' => 'height: 100%; padding: 0 0.5cm; text-decoration: none!important; color: black; width: 100%']
-                                ) ?>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
+                <div style="display: flex; flex-wrap: wrap">
+                    <?php foreach ($this['examples'] as $class => $info) : ?>
+                        <div class="col-md-4 col-sm-6 col-xs-12" style="padding: 0.5cm">
+                            <?= $this->CMD(
+                                [
+                                    '' =>
+                                        $this->TXT($info['title'], ['before' => '<h3>', 'after' => '</h3>'])
+                                        .
+                                        $this->TXT($info['description'], ['style' => 'color: gray']),
+                                ],
+                                'run', ['class' => $class],
+                                [
+                                    'class' => 'thumbnail',
+                                    'style' => 'height: 100%; padding: 0 0.5cm; text-decoration: none!important; color: black; width: 100%',
+                                ]
+                            ) ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
 
             <?php else : ?>
 
@@ -87,7 +97,8 @@ class Demo extends Robot
 
                         <p><?= $this->TXT($this['current']['description']) ?></p>
 
-                        <p><?= $this->CMD('<kbd class="text-muted bg-primary small">Esc</kbd> &nbsp;Back to index', 'index', [], ['id' => 'show-index', 'class' => ['btn', 'btn-info', 'yy-skip'], 'role' => 'button']) ?></p>
+                        <p><?= $this->CMD('<kbd class="text-muted bg-primary small">Esc</kbd> &nbsp;Back to index', 'index', [],
+                                ['id' => 'show-index', 'class' => ['btn', 'btn-info', 'yy-skip'], 'role' => 'button']) ?></p>
                     </div>
                 </div>
 
@@ -98,16 +109,16 @@ class Demo extends Robot
 
             <footer class="text-center col-md-12 col-sm-12">
                 <hr>
-                <p><?= $this->TXT(['&copy; 2016-%s epoxa', date('Y')]) ?></p>
+                <p><?= $this->TXT(['' => '&copy; 2016-%s epoxa', date('Y')]) ?></p>
             </footer>
 
         </div>
 
         <?php if (isset(YY::$CURRENT_VIEW['TRANSLATOR'])) : ?>
 
-          <?php YY::$CURRENT_VIEW['TRANSLATOR']->_SHOW(); ?>
+        <?php YY::$CURRENT_VIEW['TRANSLATOR']->_SHOW(); ?>
 
-        <?php endif; ?>
+    <?php endif; ?>
 
         <?php
     }
