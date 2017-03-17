@@ -5,11 +5,14 @@ namespace YY\System;
 use ArrayAccess;
 use YY\Core\Data;
 
-// Роботы обеспечивают интерфейс с другими сущностями (людьми, процессами)
-// Может реагировать на внешние раздражители.
-// Может отображать себя.
-// В данный момент используется HTTP.
-// Впоследствии нужно здесь сделать защиту от недостоверных, вредоносных данных.
+/**
+ * Class Robot
+ *
+ * Main building block for user interface
+ *
+ * @package YY\System
+ *
+ */
 
 class Robot extends Data
 {
@@ -45,10 +48,17 @@ class Robot extends Data
 		}
 	}
 
-	public function focusControl($name, $object = null)
+	public function focusInput($objectParam)
 	{
-		$objectHandle = YY::GetHandle($object ?: $this);
-		$script = "setFocusElement(document.getElementById('${objectHandle}[${name}]'))";
+		$object = $this;
+		if (is_string($objectParam)) {
+			$param_name = $objectParam;
+		} else {
+			$object = $objectParam[0];
+			$param_name = $objectParam[1];
+		}
+		$objectHandle = YY::GetHandle($object);
+		$script = "setFocusElement(document.getElementById('${objectHandle}[${param_name}]'))";
 		YY::clientExecute($script);
 	}
 
@@ -86,17 +96,17 @@ class Robot extends Data
 		return YY::drawCommand($visual, $htmlCaption, $this, $method, $params);
 	}
 
-	// Alternative for deprecated HUMAN_COMMAND
+	// Replacement for deprecated HUMAN_COMMAND
 
-	public function CMD($htmlCaption, $methodAndParams = null, $visual = null)
+	public function CMD($htmlCaption, $objectMethodAndParams = null, $visual = null)
 	{
 		$object = $this;
 		$method = null;
 		$params = [];
-		if (is_string($methodAndParams)) {
-			$method = $methodAndParams;
-		} elseif ($methodAndParams) {
-			foreach($methodAndParams as $key => $value) {
+		if (is_string($objectMethodAndParams)) {
+			$method = $objectMethodAndParams;
+		} elseif ($objectMethodAndParams) {
+			foreach($objectMethodAndParams as $key => $value) {
 				if ($method === null) {
 					if (is_string($value)) {
 						$method = $value;
@@ -112,42 +122,94 @@ class Robot extends Data
 		return YY::drawCommand($visual, $htmlCaption, $object, $method, $params);
 	}
 
+	/**
+	 * @deprecated
+	 *
+	 * @param      $visual
+	 * @param      $param_name
+	 * @param null $object
+	 *
+	 * @return string
+	 */
 	protected function HUMAN_TEXT($visual, $param_name, $object = null)
 	{
 		if ($object === null) $object = $this;
 		return YY::drawInput($visual, $object, $param_name);
 	}
 
-	// Alias for HUMAN_TEXT
+	// Replacement for deprecated HUMAN_TEXT
 
-	protected function INPUT($param_name, $object = null, $visual = null)
+	protected function INPUT($objectParam, $visual = null)
 	{
-		if ($object === null) $object = $this;
+		$object = $this;
+		if (is_string($objectParam)) {
+			$param_name = $objectParam;
+		} else {
+			$object = $objectParam[0];
+			$param_name = $objectParam[1];
+		}
 		return YY::drawInput($visual, $object, $param_name);
 	}
 
+	/**
+	 * @deprecated
+	 *
+	 * @param $visual
+	 * @param $htmlText
+	 *
+	 * @return string
+	 */
 	protected function MY_TEXT($visual, $htmlText)
 	{
 		return YY::drawText($visual, $htmlText);
 	}
 
-	// Alias for MY_TEXT
+	// Replacement for deprecated MY_TEXT
 
 	protected function TXT($htmlText, $visual = null)
 	{
 		return YY::drawText($visual, $htmlText);
 	}
 
+
+	/**
+	 * @deprecated
+	 *
+	 * @param      $visual
+	 * @param      $htmlCaption
+	 * @param      $param
+	 * @param null $method
+	 *
+	 * @return string
+	 */
 	protected function FLAG($visual, $htmlCaption, $param, $method = null)
 	{
 		return YY::drawFlag($visual, $htmlCaption, $this, $param, $method);
 	}
 
-	// Alias for FLAG
+	// Replacement for deprecated FLAG
 
-	protected function CHK($htmlCaption, $param, $method = null, $visual = null)
+	protected function CHK($htmlCaption, $objectParamAndMethod, $visual = null)
 	{
-		return YY::drawFlag($visual, $htmlCaption, $this, $param, $method);
+		$object = $this;
+		$param_name = '';
+		$method_name = null;
+		if (is_string($objectParamAndMethod)) {
+			$param_name = $objectParamAndMethod;
+			$method_name = null;
+		} else {
+			$idx = 0;
+			foreach($objectParamAndMethod as $key => $value) {
+				if ($idx === 0 && !is_string($value)) {
+					$object = $value;
+				} else {
+					$param_name = $key;
+					$method_name = $value; // TODO: Should we allow params even here?
+				}
+				$idx++;
+			}
+		}
+		return YY::drawFlag($visual, $htmlCaption, $object, $param_name, $method_name);
 	}
 
 	public function LINK($visual, $htmlCaption, $params = null)

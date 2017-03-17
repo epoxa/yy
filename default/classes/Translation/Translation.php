@@ -33,7 +33,7 @@ class Translation extends Robot
         <?php if (isset($this['add-lang-mode'])) : ?>
         <form class="col-md-2" style="display: inline-block; float: none; position: relative; top: 13px" onsubmit="$('#lang-ok').click(); return false;">
             <div class="input-group">
-                <?= $this->INPUT('newLangName', null, ['class' => 'form-control']); ?>
+                <?= $this->INPUT('newLangName', ['class' => 'form-control']); ?>
                 <div class="input-group-btn">
                     <?= $this->CMD('Save', 'saveNewLang', ['id' => 'lang-ok', 'class' => "btn btn-default"]); ?>
                 </div>
@@ -51,7 +51,7 @@ class Translation extends Robot
                 </div>
             <?php endif; ?>
             <div class="checkbox">
-            <?= $this->CHK('Translate mode', 'translateMode', 'updateTranslateMode') ?>
+            <?= $this->CHK('Translate mode', ['translateMode' => 'updateTranslateMode']) ?>
             </div>
         <?php endif; ?>
         <?php
@@ -87,7 +87,7 @@ class Translation extends Robot
     function addNewLang()
     {
         $this['add-lang-mode'] = true;
-        $this->focusControl('newLangName');
+        $this->focusInput('newLangName');
     }
 
     function saveNewLang()

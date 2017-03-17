@@ -23,7 +23,7 @@ class Todo extends Robot
         <div class="col-md-offset-3 col-md-6 col-sm-offset-2 col-sm-8">
             <form onsubmit="go(<?= YY::GetHandle($this) ?>, 'add'); return false;">
                 <div class="input-group">
-                    <?= $this->INPUT('new-text', null, ['class' => 'form-control']) ?>
+                    <?= $this->INPUT('new-text', ['class' => 'form-control']) ?>
                     <div class="input-group-btn">
                         <?= $this->CMD('Add', 'add', ['class' => ['btn', 'btn-primary']]) ?>
                     </div>
@@ -43,12 +43,12 @@ class Todo extends Robot
 	function add() {
 		$this['list'][] = $this['new-text'];
 		$this['new-text'] = '';
-        $this->focusControl('new-text');
+        $this->focusInput('new-text');
 	}
 
 	function remove($_params) {
 		unset($this['list'][$_params['index']]);
-        $this->focusControl('new-text');
+        $this->focusInput('new-text');
 	}
 
 }
