@@ -1,13 +1,8 @@
-version: "2"
+version: "3"
 services:
   php:
     image: bitnami/php-fpm:latest
     hostname: php
-    environment:
-      YY_TEST_BROWSER: "$YY_TEST_BROWSER"
-      YY_TEST_BASE_URL: http://web
-      YY_TEST_SELENIUM_HOST: "$YY_TEST_SELENIUM_HOST"
-      YY_TEST_SELENIUM_PORT: 4444
     expose:
       - "9000"
     volumes:
