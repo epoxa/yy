@@ -903,7 +903,10 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
 	public function count()
 	{
 		//    return count($this->properties[false]) + count($this->properties[true]);
-		return count($this->properties[false]);
+        $res = count($this->properties[false]);
+        if (isset($this->properties[0]['_source'])) $res--;
+        if (isset($this->properties[0]['_path'])) $res--;
+		return $res;
 	}
 
 }

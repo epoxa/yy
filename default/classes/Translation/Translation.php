@@ -118,6 +118,9 @@ class Translation extends Robot
             YY::$CURRENT_VIEW['TRANSLATOR'] = new Agent();
             YY::$ME['translateMode'] = true;
         } else {
+            if (isset(YY::$CURRENT_VIEW['TRANSLATOR'])) {
+                YY::$CURRENT_VIEW['TRANSLATOR']->close();
+            }
             unset(YY::$CURRENT_VIEW['TRANSLATOR'], YY::$ME['translateMode']);
         }
     }

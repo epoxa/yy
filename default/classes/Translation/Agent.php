@@ -13,12 +13,14 @@ class Agent extends Robot
 	function __construct($init = null)
 	{
 		parent::__construct($init);
-		$this['include'] = [
-			'<script src="/translate/agent.js"></script>',
-			'',
-		];
+		$this->includeAsset('<script src="/translate/agent.js"></script>');
 		$this['slugs'] = [];
 	}
+
+    function close()
+    {
+        YY::clientExecute("window.yy_translate_agent.close();");
+    }
 
 	function _PAINT()
 	{
@@ -28,8 +30,12 @@ class Agent extends Robot
 
 	function registerTranslatable($trace, $slug, $original)
 	{
-		$attributes['data-translate-slug'] = $slug;
 		$this['slugs'][$slug] = $original;
+        if (isset(YY::$CURRENT_VIEW, YY::$CURRENT_VIEW['TRANSLATION'])) {
+            if (empty(YY::$CURRENT_VIEW['TRANSLATION'][$slug])) {
+                YY::$CURRENT_VIEW['TRANSLATION'][$slug] = null; // Indicates need to translate
+            }
+        }
 		$slug = json_encode($slug);
 		YY::clientExecute("window.yy_translate_agent.registerTranslatable($slug);");
 	}
@@ -38,7 +44,7 @@ class Agent extends Robot
 	{
 		$slug = $_params['slug'];
 		$original = json_encode($this['slugs'][$slug]);
-		$current = json_encode(isset(YY::$CURRENT_VIEW['TRANSLATION'][$slug]) ? YY::$CURRENT_VIEW['TRANSLATION'][$slug] : '');
+		$current = json_encode(isset(YY::$CURRENT_VIEW['TRANSLATION'][$slug]) && YY::$CURRENT_VIEW['TRANSLATION'][$slug] !== null ? YY::$CURRENT_VIEW['TRANSLATION'][$slug] : '');
 		$slug = json_encode($slug);
 		YY::clientExecute("window.yy_translate_agent.showTranslatePrompt($slug,$original,$current);");
 	}

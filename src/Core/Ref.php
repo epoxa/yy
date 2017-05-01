@@ -69,6 +69,11 @@ class Ref implements Serializable, Iterator, ArrayAccess, Countable
 			return $this->get_EMPTY();
 		} else if ($name === '_OWNER') {
 			return $this->_isOwner;
+		} else if ($name === '_DELETED') {
+            if (!isset($this->data)) {
+                $this->data = Data::_load($this->YYID);
+            }
+			return $this->data->_DELETED;
 		} else {
             $val = $this->get_DAT()->$name; // Используйте динамические (интерпретируемые) языки динамично!
             if ($val instanceof Ref) {
