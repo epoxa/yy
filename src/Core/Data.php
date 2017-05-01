@@ -389,12 +389,14 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
 		if (isset($item)) $item = Data::_load($item);
 	}
 
-	static public function _load($YYID)
+	static public function _load($YYID, $force = false)
 	{
-		$found_data = Cache::Find($YYID);
-		if (isset($found_data)) {
-			return $found_data;
-		}
+        if (!$force) {
+            $found_data = Cache::Find($YYID);
+            if (isset($found_data)) {
+                return $found_data;
+            }
+        }
 		$fName = self::GetStoredFileName($YYID);
 		try {
 			if (file_exists($fName)) {

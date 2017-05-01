@@ -13,7 +13,7 @@ class Cache
 	static public function RegisterData(Data $data)
 	{
 		$YUID = $data->_YYID;
-		if (!array_key_exists($YUID, self::$dataList) /* Именно в таком порядке */) {
+		if (!array_key_exists($YUID, self::$dataList)) {
 			self::$dataList[$YUID] = $data;
 		}
 	}
