@@ -2,6 +2,7 @@
 namespace YY\System;
 
 use Exception;
+use ReflectionFunction;
 use YY\Core\Cache;
 use YY\Core\Data;
 use YY\Core\Importer;
@@ -33,6 +34,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 	static private $ADD_HEADERS;
 	static private $EXECUTE_BEFORE;
 	static private $EXECUTE_AFTER;
+    static private $EXECUTING_CLOSURE_MODE;
 
 	static public function Log($kind, $msg = null)
 	{
@@ -261,13 +263,18 @@ class YY extends Robot // Странно, похоже, такое наслед�
 			$query = array_slice($argv, 1);
 			parse_str(implode('&', $query), $_GET);
 
+            if (isset($_GET['me'])) {
+                YY::$ME = Data::_load($_GET['me']);
+                unset($_GET['me']);
+            }
+
 			self::_GET($_GET);
 
 			self::Log('system', '=========CHILD STOP=========');
 
 		} else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
-			if (isset($_GET['who'])) { // В этом случае who содержит код сеанса и дескриптор (внутри сеанся) робота, склеенные через дефис
+			if (isset($_GET['who'])) { // В этом случае who содержит код сеанса и дескриптор (внутри сеанса) робота, склеенные через дефис
 
 				self::_GET($_GET); // Самостоятельно ставит заголовки, в т. ч. управляющие кэшем
 
@@ -640,18 +647,41 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		return $res;
 	}
 
-	static public function drawCommand($visual, $htmlCaption, $robot, $method, $params = null)
+    /**
+     * @param                 $visual
+     * @param                 $htmlCaption
+     * @param                 $robot
+     * @param                 $method string|Callable
+     * @param                 $params
+     *
+     * @return string
+     */
+    static public function drawCommand($visual, $htmlCaption, $robot, $method, $params = null)
 	{
-		/**@var $htmlBefore string
-		 * @var $htmlBeforeContent string
-		 * @var $htmlAfterContent  string
-		 * @var $htmlAfter         string
-		 * @var $attributesText    string
-		 */
-		self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText, $htmlCaption);
-		$otherParams = self::packParams($params, true);
-		return $htmlBefore . '<a' . $attributesText . ' href="javascript:void(0);" onclick="go(' . self::GetHandle($robot) . ',\'' . htmlspecialchars($method)
-		. '\',{' . $otherParams . '}); return false;">' . $htmlBeforeContent . $htmlCaption . $htmlAfterContent . '</a>' . $htmlAfter;
+        if (self::$EXECUTING_CLOSURE_MODE && is_callable($method) && (new ReflectionFunction($method))->isClosure()) {
+
+            $closureRepresentation = Utils::GetClosureRepresentation($method);
+            if ($closureRepresentation === self::$EXECUTING_CLOSURE_MODE) {
+                /** @var \Closure $method */
+                $method->call($robot);
+            }
+
+        }  else {
+
+            /**@var $htmlBefore string
+             * @var $htmlBeforeContent string
+             * @var $htmlAfterContent  string
+             * @var $htmlAfter         string
+             * @var $attributesText    string
+             */
+            self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText, $htmlCaption);
+            $otherParams = self::packParams($params, true);
+            $methodRepresentation = is_callable($method) && (new ReflectionFunction($method))->isClosure()
+                ? '#' . Utils::GetClosureRepresentation($method)
+                : htmlspecialchars($method);
+            return $htmlBefore . '<a' . $attributesText . ' href="javascript:void(0);" onclick="go(' . self::GetHandle($robot) . ',\'' . $methodRepresentation
+            . '\',{' . $otherParams . '}); return false;">' . $htmlBeforeContent . $htmlCaption . $htmlAfterContent . '</a>' . $htmlAfter;
+        }
 	}
 
 	static public function drawSwitch($visual, $htmlCaption, $robot, $param, $value, $method = null)
@@ -663,11 +693,12 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		 * @var $attributesText    string
 		 */
 		self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText, $htmlCaption);
-		$handle = self::GetHandle($robot);
-		$id = $handle . '[' . $param . ']=' . urlencode($value);
+        $handle = self::GetHandle($robot);
+        $name = $handle . '[' . $param . ']';
+		$id = $name . '=' . urlencode($value);
 		$action = $method ? ";go($handle,\"$method\")" : '';
 		$checked = isset($robot[$param]) && $robot[$param] == $value ? ' checked' : '';
-		$element = "<input$attributesText$checked type='radio' name='$handle' id='$id' onclick='changed(this)$action; return false;'>";
+		$element = "<input$attributesText$checked type='radio' name='$name' id='$id' onclick='changed(this)$action'>";
 		return "$htmlBefore<label for='$id'>$element$htmlBeforeContent$htmlCaption$htmlAfterContent</label>$htmlAfter";
 	}
 
@@ -684,7 +715,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		$id = $handle . '[#' . $param . ']';
 		$action = $method ? ";go($handle,\"$method\")" : '';
 		$checked = isset($robot[$param]) && $robot[$param] ? ' checked' : '';
-		$element = "<input$checked type='checkbox' name='$id' id='$id' onclick='changed(this)$action; return false;'>";
+		$element = "<input$checked type='checkbox' name='$id' id='$id' onclick='changed(this)$action'>";
 		return "$htmlBefore<label$attributesText for='$id'>$htmlBeforeContent$element&nbsp;$htmlCaption$htmlAfterContent</label>$htmlAfter";
 	}
 
@@ -699,7 +730,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText, $htmlCaption);
 		$otherParams = self::packParams($params, false);
 		return $htmlBefore . '<a' . $attributesText . ' href="?who=' . self::$CURRENT_VIEW->_YYID . '-' . self::GetHandle($robot) . '&' . $otherParams
-		. '" target="_blank">' . $htmlBeforeContent . $htmlCaption . $htmlAfterContent . '</a>' . $htmlAfter;
+		. '">' . $htmlBeforeContent . $htmlCaption . $htmlAfterContent . '</a>' . $htmlAfter;
 	}
 
 	static public function drawDocument($visual, $robot, $params = null)
@@ -1017,7 +1048,19 @@ class YY extends Robot // Странно, похоже, такое наслед�
 				}
 			}
 			try {
-				$who->$do($params);
+                if (substr($do, 0, 1) === '#') {
+                    self::$EXECUTING_CLOSURE_MODE = substr($do, 1);
+                    ob_start();
+                    try {
+                        $who->_PAINT();
+                    } catch(Exception $e) {
+                        YY::Log('error', $e->getMessage());
+                    }
+                    self::$EXECUTING_CLOSURE_MODE = false;
+                    ob_end_clean();
+                } else {
+                    $who->$do($params);
+                }
 			} catch (Exception $e) {
 				if (get_class($e) !== 'YY\System\Exception\EReloadSignal') throw($e);
 			}
@@ -1206,9 +1249,13 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		if (!preg_match("/[0-9A-Za-z]+/", $method)) throw new Exception("Invalid method name: $method");
 		$yyid = $object->_YYID;
         $entry = CRON_MODE ? WEB_DIR . 'index.php' : $_SERVER['SCRIPT_FILENAME'];
-		$cmd = "php $entry who=$yyid get=$method > /dev/null &";
+		$cmd = "php $entry who=$yyid get=$method";
+        if (isset(YY::$ME)) {
+            $me = YY::$ME->_YYID;
+            $cmd .= " me=$me";
+        }
 		YY::Log("system", $cmd);
-		exec($cmd, $output, $ret);
+		exec("$cmd > /dev/null &", $output, $ret);
 	}
 
 }

@@ -3,6 +3,7 @@
 namespace YY\System;
 
 use ArrayAccess;
+use ReflectionFunction;
 use YY\Core\Data;
 
 /**
@@ -103,12 +104,12 @@ class Robot extends Data
 		$object = $this;
 		$method = null;
 		$params = [];
-		if (is_string($objectMethodAndParams)) {
+		if (is_string($objectMethodAndParams) || is_callable($objectMethodAndParams)) {
 			$method = $objectMethodAndParams;
 		} elseif ($objectMethodAndParams) {
 			foreach($objectMethodAndParams as $key => $value) {
 				if ($method === null) {
-					if (is_string($value)) {
+					if (is_string($value) || is_callable($value) && !is_array($value)) {
 						$method = $value;
 					} else {
 						$object = $value[0];

@@ -1,8 +1,8 @@
 <?php
 namespace YY\System;
 
+use ReflectionFunction;
 use YY\Core\Cache;
-use YY\System\YY;
 
 /**
  * Created 27.03.13
@@ -137,5 +137,11 @@ class Utils
 		header("Location: " . $protocol . ROOT_URL);
 		exit;
 	}
+
+    public static function GetClosureRepresentation($method)
+    {
+        $closure = new ReflectionFunction($method);
+        return md5($closure->getFileName() . ':' . $closure->getStartLine() . $closure->getShortName());
+    }
 
 }
