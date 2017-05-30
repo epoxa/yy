@@ -432,7 +432,14 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         if (isset($item)) $item = Data::_load($item);
     }
 
-    static protected function _internalLoadObject($YYID) {
+	static public function _load($YYID, $force = false)
+	{
+        if (!$force) {
+            $found_data = Cache::Find($YYID);
+            if (isset($found_data)) {
+                return $found_data;
+            }
+        }
         $fName = self::GetStoredFileName($YYID);
         try {
             if (file_exists($fName)) {
@@ -953,7 +960,10 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
     public function count()
     {
         //    return count($this->properties[false]) + count($this->properties[true]);
-        return count($this->properties[false]);
+        $res = count($this->properties[false]);
+        if (isset($this->properties[0]['_source'])) $res--;
+        if (isset($this->properties[0]['_path'])) $res--;
+		return $res;
     }
 
 }
