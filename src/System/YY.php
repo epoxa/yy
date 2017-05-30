@@ -374,6 +374,9 @@ class YY extends Robot // Странно, похоже, такое наслед�
 					ob_start();
 					try {
 						self::_DO($_POST);
+                        if (self::$CURRENT_VIEW && self::$CURRENT_VIEW->_DELETED) {
+                            self::$CURRENT_VIEW = null; // In case of rebooting or reincarnation
+                        }
 						$debugOutput = Log::GetScreenOutput();
 						if (isset(self::$CURRENT_VIEW, self::$CURRENT_VIEW['ROBOT']) && is_object(self::$CURRENT_VIEW['ROBOT'])) {
 							self::$CURRENT_VIEW['ROBOT']['_debugOutput'] = $debugOutput;
@@ -552,7 +555,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		$classes = null;
 		self::modifyVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributes, $styles, $classes);
 		if ($content) {
-			self::Translate($content, $attributes);
+			self::TranslateElement($content, $attributes);
 		}
 		$attributesText = '';
 		if ($attributes) {
@@ -674,13 +677,19 @@ class YY extends Robot // Странно, похоже, такое наслед�
              * @var $htmlAfter         string
              * @var $attributesText    string
              */
-            self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText, $htmlCaption);
             $otherParams = self::packParams($params, true);
-            $methodRepresentation = is_callable($method) && (new ReflectionFunction($method))->isClosure()
-                ? '#' . Utils::GetClosureRepresentation($method)
-                : htmlspecialchars($method);
-            return $htmlBefore . '<a' . $attributesText . ' href="javascript:void(0);" onclick="go(' . self::GetHandle($robot) . ',\'' . $methodRepresentation
-            . '\',{' . $otherParams . '}); return false;">' . $htmlBeforeContent . $htmlCaption . $htmlAfterContent . '</a>' . $htmlAfter;
+                $methodRepresentation = is_callable($method) && (new ReflectionFunction($method))->isClosure()
+                    ? '#' . Utils::GetClosureRepresentation($method)
+                    : htmlspecialchars($method);
+            $script = 'go(' . self::GetHandle($robot) . ',\'' . $methodRepresentation . '\',{' . $otherParams . '})';
+            if (isset($visual, $visual['confirm'])) {
+                $confirm = substr(json_encode('' . $visual['confirm']), 1, -1);
+                unset($visual['confirm']);
+                $script = "if (confirm('$confirm')) " . $script;
+            }
+            self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText, $htmlCaption);
+            return $htmlBefore . '<a' . $attributesText . ' href="javascript:void(0);" onclick="' . $script .'; return false;">'
+            . $htmlBeforeContent . $htmlCaption . $htmlAfterContent . '</a>' . $htmlAfter;
         }
 	}
 
@@ -1162,81 +1171,107 @@ class YY extends Robot // Странно, похоже, такое наслед�
 	//
 	///////////////////////////////////
 
-	/**
-	 * @param $htmlCaption null|string|array|\Iterator
-	 * @param $attributes
-	 *
-	 * @return void
-	 *
-	 */
-	protected static function Translate(&$htmlCaption, &$attributes)
-	{
+    static function Translate($caption)
+    {
 
-		$translation = isset(self::$CURRENT_VIEW, self::$CURRENT_VIEW['TRANSLATION']) ? self::$CURRENT_VIEW['TRANSLATION'] : null;
+        if ($caption) {
 
-		if ($htmlCaption) {
+            self::InternalTranslate($caption, $slug, $original);
 
-			if (is_scalar($htmlCaption)) {
+            if ($slug !== '' && isset(YY::$CURRENT_VIEW['TRANSLATOR'])) {
+                $stack = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 8);
+                $trace = md5(print_r($stack, true));
+                YY::$CURRENT_VIEW['TRANSLATOR']->registerTranslatable($trace, $slug, $original);
+            }
 
-				if (!$translation) return; // Just optimization
+        }
 
-				// Make surrogate slug from text
+        return $caption;
 
-				if (strlen($htmlCaption) <= 200) {
-					$slug = md5($htmlCaption);
-				} else {
-					$slug = md5(substr($htmlCaption, 0, 100) . substr($htmlCaption, -100));
-				}
-				$original = $htmlCaption;
-				$args = [];
+    }
 
-			} else { // Assume array or Iterator
+    /**
+     * @param $htmlCaption null|string|array|\Iterator
+     * @param $attributes
+     *
+     * @return void
+     *
+     */
+    protected static function TranslateElement(&$htmlCaption, &$attributes)
+    {
 
-				$slug = null;
-				$original = null;
-				$args = [];
-				foreach ($htmlCaption as $key => $val) {
-					if ($slug === null) {
-						// First item
-						$slug = $key;
-						if (is_int($slug)) {
-							if (strlen($val) <= 200) {
-								$slug = md5($val);
-							} else {
-								$slug = md5(substr($val, 0, 100) . substr($val, -100));
-							}
-						}
-						$original = $val;
-					} else {
-						// Other items
-						$args[] = $val;
-					}
-				}
-			}
+        if ($htmlCaption) {
 
-
-			$current = $original;
-			if ($slug !== '' && $translation) {
-				if (isset($translation[$slug])) {
-					$current = $translation[$slug];
-				}
-			}
-			if (count($args)) {
-				$htmlCaption = vsprintf($current, $args);
-			} else {
-				$htmlCaption = $current;
-			}
+            self::InternalTranslate($htmlCaption, $slug, $original);
 
 			if ($slug !== '' && isset(YY::$CURRENT_VIEW['TRANSLATOR'])) {
-				$attributes['data-translate-slug'] = $slug;
-				$stack = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 8);
-				$trace = md5(print_r($stack, true));
-				YY::$CURRENT_VIEW['TRANSLATOR']->registerTranslatable($trace, $slug, $original);
-			}
+                $attributes['data-translate-slug'] = $slug;
+                $stack = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 8);
+                $trace = md5(print_r($stack, true));
+                YY::$CURRENT_VIEW['TRANSLATOR']->registerTranslatable($trace, $slug, $original);
+            }
 
 		}
 
-	}
+    }
+
+    private static function InternalTranslate(&$caption, &$extractedSlug = null, &$extractedFormatString = null) {
+
+        $translation = isset(self::$CURRENT_VIEW, self::$CURRENT_VIEW['TRANSLATION']) ? self::$CURRENT_VIEW['TRANSLATION'] : null;
+
+        if (is_scalar($caption)) {
+
+            if (!$translation) return; // Just optimization
+
+            // Make surrogate slug from text
+
+            if (strlen($caption) <= 200) {
+                $extractedSlug = md5($caption);
+            } else {
+                $extractedSlug = md5(substr($caption, 0, 100) . substr($caption, -100));
+            }
+            $extractedFormatString = $caption;
+            $args = [];
+
+        } else { // Assume array or Iterator
+
+            $extractedSlug = null;
+            $extractedFormatString = null;
+            $args = [];
+            foreach ($caption as $key => $val) {
+                if ($extractedSlug === null) {
+                    // First item
+                    $extractedSlug = $key;
+                    if (is_int($extractedSlug)) {
+                        if (strlen($val) <= 200) {
+                            $extractedSlug = md5($val);
+                        } else {
+                            $extractedSlug = md5(substr($val, 0, 100) . substr($val, -100));
+                        }
+                    }
+                    $extractedFormatString = $val;
+                } else {
+                    // Other items
+                    $args[] = $val;
+                }
+            }
+        }
+
+
+        $current = $extractedFormatString;
+        if ($extractedSlug !== '' && $translation) {
+            if (isset($translation[$extractedSlug]) && $translation[$extractedSlug] !== null) {
+                $current = $translation[$extractedSlug];
+            }
+        }
+        if (count($args)) {
+            $caption = vsprintf($current, $args);
+        } else {
+            $caption = $current;
+        }
+
+
+    }
 
 	///////////////////////////////////
 	//

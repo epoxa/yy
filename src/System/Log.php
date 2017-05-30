@@ -13,6 +13,7 @@ class Log
 //    'import' => 'import',
 //    'system' => 'sys, debug',
 			'debug' => 'debug, screen',
+            'warning' => 'debug, error, screen',
 			'error' => 'debug, error, screen',
 			'sql' => 'debug',
 			'gatekeeper' => 'debug, gatekeeper',
