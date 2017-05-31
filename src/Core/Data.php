@@ -785,7 +785,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
             }
         } else if ($from instanceof Ref || $from instanceof Data) {
             $keys = $from->_all_keys();
-            // TODO: А итератор сейчас только скаклярные свойства делает. Может объектные не надо копировать?
+            // TODO: А итератор сейчас только скалярные свойства делает. Может объектные не надо копировать?
             foreach ($keys as $key) {
                 if (!is_string($key) || substr($key, 0, 1) !== '_') { // Системные свойства не копируем
                     $this[$key] = $from[$key];
