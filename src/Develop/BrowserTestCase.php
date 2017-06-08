@@ -1,16 +1,19 @@
 <?php
 
-
 namespace YY\Develop;
 
 
 use Exception;
 use PHPUnit_Extensions_Selenium2TestCase;
+use PHPUnit_Extensions_Selenium2TestCase_Exception;
 use PHPUnit_Extensions_Selenium2TestCase_ScreenshotListener;
 
 class BrowserTestCase extends PHPUnit_Extensions_Selenium2TestCase
 {
 
+    /**
+     * @var PHPUnit_Extensions_Selenium2TestCase_ScreenshotListener $listener
+     */
 	private $listener;
 
 	protected function setUp()
@@ -25,7 +28,7 @@ class BrowserTestCase extends PHPUnit_Extensions_Selenium2TestCase
 		$this->installConsoleHook();
 	}
 
-	public function onNotSuccessfulTest($e)
+    public function onNotSuccessfulTest($e)
 	{
 		if ($this->listener) {
 			$this->listener->addError($this, $e, null);
