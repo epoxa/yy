@@ -36,6 +36,10 @@ class Runner extends Robot
                     <div class="col-md-4">
                         <?php if (isset($this['PID'])) : ?>
                             <?= $this->TXT(['Run for %d:%02d minutes<br>Memory: %d KB', floor($this['time'] / 60), $this['time'] % 60, $this['memory']]) ?>
+                        <?php else : ?>
+                            <?= $this->TXT('This thread is idle now') ?>
+                            <br>
+                            <?= $this->TXT('Press start button to activate') ?>
                         <?php endif; ?>
                     </div>
                     <div class="col-md-2 text-right">
@@ -84,7 +88,7 @@ class Runner extends Robot
         $this['PID'] = getmypid();
         $this['startAmount'] = $this['amount'];
         $this['startTime'] = time();
-        if (!pcntl_signal(SIGTERM, function ($sig, $siginfo) {
+        if (!pcntl_signal(SIGTERM, function () {
             $this['stop'] = true;
         })
         ) {
