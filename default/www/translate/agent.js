@@ -33,7 +33,6 @@
         if (!$translatorIndicator) {
             createHandle();
         }
-        console.info('registerTranslatable: ');
         $('*[data-translate-slug="' + md5slug + '"]').hover(
             function (e) {
                 var p = $(this).offset();
