@@ -1,6 +1,8 @@
 <?php
 
-class TestAsync extends PHPUnit_Extensions_Selenium2TestCase
+use YY\Develop\BrowserTestCase;
+
+class TestAsync extends BrowserTestCase
 {
 
 	protected function setUp()
