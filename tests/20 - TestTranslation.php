@@ -1,10 +1,13 @@
 <?php
 
-class TestTranslation extends PHPUnit_Extensions_Selenium2TestCase
+use YY\Develop\BrowserTestCase;
+
+class BrowserTestTranslation extends BrowserTestCase
 {
 
 	protected function setUp()
 	{
+		parent::setUp();
 		$this->setBrowser(getenv('YY_TEST_BROWSER')); //  firefox
 		$this->setBrowserUrl(getenv('YY_TEST_BASE_URL')); // http://yy.local/
 		$this->setHost(getenv('YY_TEST_SELENIUM_HOST')); // 127.0.0.1
@@ -22,19 +25,18 @@ class TestTranslation extends PHPUnit_Extensions_Selenium2TestCase
 		$result = $this->title();
 		$this->assertEquals("YY Demo", $result);
 
-		$this->byXPath("(//a[@class='thumbnail'])[4]")->click();
+		$this->byXPath("//a/h3[contains(text(),'Translation')]")->click();
 		$result = $this->byCssSelector("h3")->text();
+
 		$this->assertEquals("Current language", $result);
 		$this->byLinkText("Add New")->click();
 		$this->byId("1[newLangName]")->value("RU");
 		$this->byLinkText("Save")->click();
 
-		if (getenv('YY_TEST_BROWSER') !== 'chrome') return;
+//		$result = $this->byCssSelector("div.alert.alert-danger")->text();
+//		$this->assertEquals("Selected language does not have a translation at the moment.\nYou can translate any text by clicking red dot while \"Translate mode\" is on.", $result);
 
-		$result = $this->byCssSelector("div.alert.alert-danger")->text();
-		$this->assertEquals("Selected language does not have a translation at the moment.\nYou can translate any text by clicking red dot while \"Translate mode\" is on.", $result);
-		$result = $this->byCssSelector("div.alert.alert-danger > span")->text();
-		$this->assertEquals("Selected language does not have a translation at the moment.\nYou can translate any text by clicking red dot while \"Translate mode\" is on.", $result);
+		if (getenv('YY_TEST_BROWSER') !== 'chrome') return;
 
 		$this->moveto(['element' => $this->byXPath("//a[contains(text(),'Back to index')]"), 'xoffset' => 10, 'yoffset' => 10]);
 		sleep(1);

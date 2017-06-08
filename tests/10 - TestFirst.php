@@ -1,6 +1,8 @@
 <?php
 
-class TestFirst extends PHPUnit_Extensions_Selenium2TestCase
+use YY\Develop\BrowserTestCase;
+
+class TestFirst extends BrowserTestCase
 {
 
 	protected function setUp()
