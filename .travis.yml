@@ -2,7 +2,6 @@ sudo: required
 services:
   - docker
 language: none
-group: deprecated-2017Q2
 env:
   global:
     - USER=travis

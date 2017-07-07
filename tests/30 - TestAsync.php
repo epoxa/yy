@@ -7,6 +7,7 @@ class TestAsync extends BrowserTestCase
 
 	protected function setUp()
 	{
+		parent::setUp();
 		$this->setBrowser(getenv('YY_TEST_BROWSER')); //  firefox
 		$this->setBrowserUrl(getenv('YY_TEST_BASE_URL')); // http://yy.local/
 		$this->setHost(getenv('YY_TEST_SELENIUM_HOST')); // 127.0.0.1
