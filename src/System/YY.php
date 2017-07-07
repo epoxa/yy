@@ -817,6 +817,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		 * @var $attributesText    string
 		 */
 		self::parseVisual($visual, $htmlBefore, $htmlBeforeContent, $htmlAfterContent, $htmlAfter, $attributesText);
+
 		$html = '<form style="display:inline" id="file_upload_form" method="post" enctype="multipart/form-data" action="?who=' . self::GetHandle($robot)
 			. '&what=' . $propertyName . '">';
 		$html .= $htmlBeforeContent;
