@@ -5,14 +5,16 @@ namespace YY\Demo\Translation;
 
 
 use YY\System\Robot;
+use YY\System\Translation\TranslatorInterface;
 use YY\System\YY;
 
-class Agent extends Robot
+class Agent extends Robot implements TranslatorInterface
 {
 
 	function __construct($init = null)
 	{
 		parent::__construct($init);
+        $this->includeAsset('<script src="/js/jquery.editable.js"></script>');
 		$this->includeAsset('<script src="/translate/agent.js"></script>');
 		$this['slugs'] = [];
 	}
@@ -28,8 +30,9 @@ class Agent extends Robot
 		YY::clientExecute("window.yy_translate_agent.setTranslatorHandle('$myHandle');");
 	}
 
-	function registerTranslatable($trace, $slug, $original)
+	function registerTranslatable($trace, $slug, $original, $attributes)
 	{
+        $attributes['data-translate-slug'] = $slug;
 		$this['slugs'][$slug] = $original;
         if (isset(YY::$CURRENT_VIEW, YY::$CURRENT_VIEW['TRANSLATION'])) {
             if (empty(YY::$CURRENT_VIEW['TRANSLATION'][$slug])) {
@@ -38,6 +41,7 @@ class Agent extends Robot
         }
 		$slug = json_encode($slug);
 		YY::clientExecute("window.yy_translate_agent.registerTranslatable($slug);");
+        return $attributes;
 	}
 
 	function showTranslatePrompt($_params)

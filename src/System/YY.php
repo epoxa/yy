@@ -906,7 +906,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		if ($faceExists) {
 			$wasFace = self::$CURRENT_VIEW['RENDERED'][$handle];
 		} else {
-			$wasFace = '';
+			$wasFace = null;
 			//self::$OUTGOING[$robot] = null; // Резервируем место, чтобы выдавались от старших к младшим
 		}
 		ob_start();
@@ -1101,6 +1101,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		if (count($who) === 2) {
 			$view = Data::_load($who[0]);
 			assert(isset($view));
+            self::$CURRENT_VIEW = $view;
 			$who = self::GetObjectByHandle($who[1], $view);
 		} else {
 			$who = Data::_load($who[0]);
@@ -1178,12 +1179,6 @@ class YY extends Robot // Странно, похоже, такое наслед�
 
             self::InternalTranslate($caption, $slug, $original);
 
-            if ($slug !== '' && isset(YY::$CURRENT_VIEW['TRANSLATOR'])) {
-                $stack = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 8);
-                $trace = md5(print_r($stack, true));
-                YY::$CURRENT_VIEW['TRANSLATOR']->registerTranslatable($trace, $slug, $original);
-            }
-
         }
 
         return $caption;
@@ -1204,11 +1199,16 @@ class YY extends Robot // Странно, похоже, такое наслед�
 
             self::InternalTranslate($htmlCaption, $slug, $original);
 
-			if ($slug !== '' && isset(YY::$CURRENT_VIEW['TRANSLATOR'])) {
-                $attributes['data-translate-slug'] = $slug;
+            if ($slug !== '' && isset(YY::$CURRENT_VIEW['TRANSLATOR'])) {
                 $stack = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 8);
                 $trace = md5(print_r($stack, true));
-                YY::$CURRENT_VIEW['TRANSLATOR']->registerTranslatable($trace, $slug, $original);
+                if ($attributes === null) {
+                    $attributes = [];
+                }
+                $newAttributes = YY::$CURRENT_VIEW['TRANSLATOR']->registerTranslatable($trace, $slug, $original, $attributes);
+                if ($newAttributes) {
+                    $attributes = $newAttributes;
+                }
             }
 
 		}
