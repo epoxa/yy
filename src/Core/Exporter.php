@@ -10,18 +10,26 @@ class Exporter
 
 	static private $PATHS;
 	static private $WAYS;
+    static private $INLINE_KEYS;
 
 	static public function prepareEmptyDir($dir)
 	{
 		if (file_exists($dir)) {
 			self::clearDir($dir);
 		} else {
+            umask(0);
 			mkdir($dir, 0775, true);
 		}
 	}
 
-	static public function exportSubtree($data, $physicalPath)
+    /**
+     * @param Data $data
+     * @param string $physicalPath
+     * @param array $inlineKeys
+     */
+    static public function exportSubtree($data, $physicalPath, $inlineKeys = [''])
 	{
+        self::$INLINE_KEYS = $inlineKeys ?: [];
 		self::prepareEmptyDir($physicalPath);
 		self::$PATHS = new Data();
 		self::$WAYS = new Data();
@@ -55,11 +63,14 @@ class Exporter
 		//    }
 		self::$PATHS[$node] = $path;
 		self::$WAYS[$node] = $way;
-		foreach (array_merge($node->_scalar_keys(), $node->_object_keys()) as $key) {
+        /** @var Data $node */
+        foreach ($node->_all_keys() as $key) {
+            if (substr($key, 0, 1) === '_') continue;
 			$val = $node[$key];
 			if (is_object($val) && $val->_OWNER) {
-				$isInline = ($key === 'visual' || isset($val['kind']));
+				$isInline = in_array($key, self::$INLINE_KEYS);
 				$newWay = $way . $key . '/';
+                $key = ($key === '') ? '_' : $key;
 				if ($isInline) {
 					self::buildPathAndWays($val, $path, $inlinePrefix . '.' . $key . '-', $newWay);
 				} else {
@@ -121,6 +132,7 @@ class Exporter
 				$propNameView = var_export($propName, true);
 				if (is_string($propName)) {
 					$subdirName = $propName;
+                    if ($subdirName === '') $subdirName = '_';
 				} else $subdirName = "." . gettype($propName) . "." . $propName;
 			} else {
 				continue;
@@ -138,7 +150,7 @@ class Exporter
 					} else {
 						$wayOffset = $propName;
 					}
-					if ($propName === 'visual' || $propName === 'translation' || isset($propValue['kind'])) $inline = true;
+					if (in_array($propName, self::$INLINE_KEYS)) $inline = true;
 					// TODO: может еще в каких случаях inline установить?
 					if ($inline) {
 						$propValueView = self::getNodeText($propValue, $physicalPath, $subdirName, $wayOffset, $indent + 4, $currentImportNode);
