@@ -14,7 +14,7 @@ class Agent extends Robot implements TranslatorInterface
 	function __construct($init = null)
 	{
 		parent::__construct($init);
-        $this->includeAsset('<script src="/js/jquery.editable.js"></script>');
+//        $this->includeAsset('<script src="/js/jquery.editable.js"></script>');
 		$this->includeAsset('<script src="/translate/agent.js"></script>');
 		$this['slugs'] = [];
 	}
