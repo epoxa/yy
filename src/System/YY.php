@@ -335,7 +335,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 					YY::createNewView($viewId);
 				} catch (EReloadSignal $e) {
 					Cache::Flush();
-					self::drawReload();
+					self::drawReload(); // Possible can lead to infinite reloading
 					return;
 				}
 				if (isset(YY::$CURRENT_VIEW['ROBOT'])) { // Устанавливается в SYSTEM->viewCreated()
@@ -353,78 +353,88 @@ class YY extends Robot // Странно, похоже, такое наслед�
 			}
 			self::$CURRENT_VIEW['lastAccess'] = time();
 
-			YY::$WORLD['SYSTEM']->initializePostRequest();
+            self::DisableCaching();
 
-			if (count($_FILES)) { // Вот такие странные соглашения!
+            YY::$WORLD['SYSTEM']->initializePostRequest();
 
-				self::_UPLOAD(array_pop($_FILES), $_GET);
-				YY::Log('system', 'File uploaded');
-				// TODO: Call some kind of user code to reflect success uploading (event or whatnot)
+            if ($isFirstPost) { // Специальный случай - инициализация после обновления.
 
-			} else {
+                YY::$WORLD['SYSTEM']->viewRetrieved();
 
-				self::DisableCaching();
+            } else {
 
-				if ($isFirstPost) { // Специальный случай - инициализация после обновления.
+                /*
 
-					YY::$WORLD['SYSTEM']->viewRetrieved();
+                // Uploaded files will be handled automatically if "who" param is present
 
-				} else {
-
-					ob_start();
-					try {
-						self::_DO($_POST);
-                        if (self::$CURRENT_VIEW && self::$CURRENT_VIEW->_DELETED) {
-                            self::$CURRENT_VIEW = null; // In case of rebooting or reincarnation
+                if (count($_FILES) && isset($_REQUEST['who'])) {
+                    $who = YY::GetObjectByHandle($_REQUEST['who']);
+                    foreach ($_FILES as $key => $fileInfo) {
+                        if ($fileInfo['error']) {
+                            throw new Exception('Failed uploading file ' . $fileInfo['name']. '. Error code ' . $fileInfo['error'] . ".");
                         }
-						$debugOutput = Log::GetScreenOutput();
-						if (isset(self::$CURRENT_VIEW, self::$CURRENT_VIEW['ROBOT']) && is_object(self::$CURRENT_VIEW['ROBOT'])) {
-							self::$CURRENT_VIEW['ROBOT']['_debugOutput'] = $debugOutput;
-						}
-						$output = ob_get_clean();
-						if ($output > "") {
-							YY::Log(array('system', 'error'), "Output during method execution:\n" . $output);
-						}
-					} catch (Exception $e) {
-						ob_end_clean();
-						YY::Log('error', $e->getMessage());
-						$msg = null;
-						if (DEBUG_MODE && DEBUG_ALLOWED_IP) {
-							$msg = $e->getMessage();
-						}
-						self::drawReload($msg);
+                        $who[$key] = file_get_contents($fileInfo['tmp_name']);
+                        unlink($fileInfo['tmp_name']);
+                        YY::Log('system', 'File uploaded: ' . $fileInfo['name']);
+                    }
+                }
+
+                */
+
+                ob_start();
+                try {
+                    self::_DO($_POST);
+                    if (self::$CURRENT_VIEW && self::$CURRENT_VIEW->_DELETED) {
+                        self::$CURRENT_VIEW = null; // In case of rebooting or reincarnation
+                    }
+                    $debugOutput = Log::GetScreenOutput();
+                    if (isset(self::$CURRENT_VIEW, self::$CURRENT_VIEW['ROBOT']) && is_object(self::$CURRENT_VIEW['ROBOT'])) {
+                        self::$CURRENT_VIEW['ROBOT']['_debugOutput'] = $debugOutput;
+                    }
+                    $output = ob_get_clean();
+                    if ($output > "") {
+                        YY::Log(array('system', 'error'), "Output during method execution:\n" . $output);
+                    }
+                } catch (Exception $e) {
+                    ob_end_clean();
+                    YY::Log('error', $e->getMessage());
+                    $msg = null;
+                    if (DEBUG_MODE && DEBUG_ALLOWED_IP) {
+                        $msg = $e->getMessage();
+                    }
+                    self::drawReload($msg);
 //						Cache::Flush();
-						return;
-					}
-				}
+                    return;
+                }
+            }
 
-				if (YY::$RELOAD_URL) {
-					self::drawReload();
-				} else {
-					ob_start();
-					try {
-						$robot = isset(self::$CURRENT_VIEW['ROBOT']) ? self::$CURRENT_VIEW['ROBOT'] : null;
-						if ($robot) $robot->_SHOW();
-						ob_end_clean();
-					} catch (Exception $e) {
-						if (get_class($e) !== 'YY\System\Exception\EReloadSignal') {
-							YY::Log('system,error', $e->getMessage());
-						}
-						ob_end_clean();
-					}
-					if (self::$RELOAD_URL) { // TODO: It's a bit weird. How can it come within _SHOW call?
-						self::drawReload();
-					} else {
-						self::sendJson(self::receiveChanges());
-					}
-				}
-			}
+            if (YY::$RELOAD_URL) {
+                self::drawReload();
+            } else {
+                ob_start();
+                try {
+                    $robot = isset(self::$CURRENT_VIEW['ROBOT']) ? self::$CURRENT_VIEW['ROBOT'] : null;
+                    if ($robot) $robot->_SHOW();
+                    ob_end_clean();
+                } catch (Exception $e) {
+                    if (get_class($e) !== 'YY\System\Exception\EReloadSignal') {
+                        YY::Log('system,error', $e->getMessage());
+                    }
+                    ob_end_clean();
+                }
+                if (self::$RELOAD_URL) { // TODO: It's a bit weird. How can it come within _SHOW call?
+                    self::drawReload();
+                } else {
+                    self::sendJson(self::receiveChanges());
+                }
+            }
 
-		} else if (in_array($_SERVER['REQUEST_METHOD'], ['HEAD', 'OPTIONS'])) {
 
-			// Just ignore for now
+        } else if (in_array($_SERVER['REQUEST_METHOD'], ['HEAD', 'OPTIONS'])) {
 
-		} else {
+            // Just ignore for now
+
+        } else {
 
 			YY::Log('system', "Unexpected HTTP request method: " . $_SERVER['REQUEST_METHOD']);
 
@@ -1075,21 +1085,6 @@ class YY extends Robot // Странно, похоже, такое наслед�
 				if (get_class($e) !== 'YY\System\Exception\EReloadSignal') throw($e);
 			}
 		}
-	}
-
-	static private final function _UPLOAD($file, $_DATA)
-	{
-		$who = $_DATA['who'];
-		assert(isset($who));
-		$who = explode('-', $who);
-		assert(count($who) === 2);
-		$view = Data::_load($who[0]);
-		assert(isset($view));
-		$who = self::GetObjectByHandle($who[1], $view);
-		assert(isset($who));
-		$prop_name = $_DATA['what'];
-		assert(isset($prop_name));
-		$who[$prop_name] = file_get_contents($file['tmp_name']);
 	}
 
 	static private final function _GET($_DATA)

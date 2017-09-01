@@ -147,13 +147,13 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         $this->_flush();
         $yyid = $this->_YYID;
         $lockFileName = LOCK_DIR . $yyid . ".lock";
-        fclose(self::$locks[$yyid]);
         if (file_exists($lockFileName)) {
             @unlink($lockFileName);
         } else {
             YY::Log('error', 'Lock file absent for ' . $this);
         }
-        unset(self::$locks[$lockFileName]);
+        fclose(self::$locks[$yyid]);
+        unset(self::$locks[$yyid]);
     }
 
     static protected function FileGetContentsGracefully($path)
