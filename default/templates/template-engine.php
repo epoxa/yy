@@ -23,7 +23,5 @@
 <body>
 <div id="blind" style="position: fixed; width: 100%; height: 100%; z-index: 2147483647; cursor:progress; display: none">
 </div>
-<iframe id="upload_result" name="upload_result" src="" style="width:0;height:0;border:0 solid #fff;"
-        tabindex="-1"></iframe>
 </body>
 </html>

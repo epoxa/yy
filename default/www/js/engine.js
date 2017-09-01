@@ -73,6 +73,8 @@ var controlToFocus = null;
             if (modified.hasOwnProperty(idx)) {
                 var el = modified[idx];
                 if (el.tagName == 'INPUT' && el.type == 'file') {
+                    // TODO
+                    /*
                     modified.splice(idx, 1);
                     var form = el.form;
                     form.target = 'upload_result';
@@ -81,6 +83,7 @@ var controlToFocus = null;
                         setTimeout(continue_send, 0);
                     };
                     form.submit();
+                    */
                     return;
                 }
             }
