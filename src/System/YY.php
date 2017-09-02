@@ -136,6 +136,13 @@ class YY extends Robot // Странно, похоже, такое наслед�
 			$request = [];
 			$queryString = '';
 		}
+        if (isset($_SESSION['pathInfo'])) {
+            $pathInfo = $_SESSION['pathInfo'];
+            unset($_SESSION['pathInfo']);
+        } else {
+            $pathInfo = '';
+        }
+		YY::$CURRENT_VIEW['pathInfo'] = $pathInfo;
 		YY::$CURRENT_VIEW['request'] = $request;
 		YY::$CURRENT_VIEW['queryString'] = $queryString;
 		YY::$CURRENT_VIEW['secure'] = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'];
@@ -297,30 +304,30 @@ class YY extends Robot // Странно, похоже, такое наслед�
 				Cache::Flush(); // TODO: А зачем? Что могло поменяться в мире? Разве что SYSTEM->started выполнено. Но там сейчас пусто
 				return;
 			}
+            $viewId = $_POST['view'];
 
-			self::$RELOAD_URL = false;
-			self::$OUTGOING = new Data();
-			self::$ADD_HEADERS = [];
-			self::$EXECUTE_BEFORE = null;
-			self::$EXECUTE_AFTER = null; // По крайней мере, clientExecute может вызываться в обработчике, а не только в PAINT
+            self::$RELOAD_URL = false;
+            self::$OUTGOING = new Data();
+            self::$ADD_HEADERS = [];
+            self::$EXECUTE_BEFORE = null;
+            self::$EXECUTE_AFTER = null; // По крайней мере, clientExecute может вызываться в обработчике, а не только в PAINT
 
-			$viewId = $_POST['view'];
-			$isFirstPost = count($_POST) === 1;
+            self::$CURRENT_VIEW = null;
 
-			self::TryRestore();
+            self::TryRestore();
 
-			if ($isFirstPost) {
-				self::$WORLD['SYSTEM']->incarnationRequired();
-				if (!isset(self::$ME)) {
-					YY::createNewIncarnation();
-				}
-			} else if (!isset(self::$ME)) {
-				self::drawReload();
-				return;
-			}
+            $isFirstPost = empty(YY::$ME) || !isset(YY::$ME['VIEWS'][$viewId]);
 
-			YY::$CURRENT_VIEW = null;
-			$views = YY::$ME['VIEWS'];
+            if ($isFirstPost) {
+                assert(count($_POST) === 1);
+                self::$WORLD['SYSTEM']->incarnationRequired();
+                if (!isset(self::$ME)) {
+                    YY::createNewIncarnation();
+                }
+            }
+
+            $views = YY::$ME['VIEWS'];
+
 			if (isset($views[$viewId])) {
 				$view = $views[$viewId];
 				if ($view === null || !isset($view['ROBOT']) || $view['ROBOT'] === null) { // Видимо, сильно старый, удален.

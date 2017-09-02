@@ -127,6 +127,9 @@ class Utils
 			}
 			$_SESSION['request'] = $request; // Params extracted, referer added
 		}
+        if (isset($_SERVER['REQUEST_URI']) && $_SERVER['REQUEST_URI'] !== '/') {
+            $_SESSION['pathInfo'] = $_SERVER['REQUEST_URI'];
+        }
 	}
 
 	static public function RedirectRoot()
