@@ -1,14 +1,14 @@
 version: "3"
 services:
   php:
-    image: bitnami/php-fpm:latest
+    image: php:fpm
     hostname: php
     expose:
       - "9000"
     volumes:
-      - ./..:/app
+      - ./..:/var/www/html
   web:
-    image: bitnami/nginx:latest
+    image: nginx:latest
     hostname: web
     links:
       - php
@@ -19,5 +19,5 @@ services:
       - '80:80'
       - '443:443'
     volumes:
-      - ./yy.nginx.conf:/bitnami/nginx/conf/vhosts/yy.conf
-      - ./..:/app
+      - ./nginx.conf.d:/etc/nginx/conf.d
+      - ./..:/var/www/html

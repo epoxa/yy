@@ -1,4 +1,4 @@
-dist: precise
+dist: xenial
 sudo: required
 services:
   - docker
@@ -16,7 +16,10 @@ before_install:
 - sleep 20
 - docker-compose -f docker-compose-tests.yml ps
 - docker-compose -f docker-compose-tests.yml logs php
-- docker-compose -f docker-compose-tests.yml exec -T php sh -c "curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer"
+- docker-compose -f docker-compose-tests.yml exec -T php apt update
+- docker-compose -f docker-compose-tests.yml exec -T php apt install unzip
+- docker-compose -f docker-compose-tests.yml exec -T php docker-php-ext-install pcntl
+- docker-compose -f docker-compose-tests.yml exec -T php sh -c "curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer"
 - docker-compose -f docker-compose-tests.yml exec -T php composer update
 script:
 - docker-compose -f docker-compose-tests.yml exec -T php vendor/bin/phpunit

@@ -986,12 +986,20 @@ class YY extends Robot // Странно, похоже, такое наслед�
 
 	static private final function _DO($_DATA)
 	{
-		$who = $_DATA['who'];
-		assert(isset($who));
-		$who = self::GetObjectByHandle($who);
-		assert(isset($who));
-		$do = $_DATA['do'];
-		if (substr($do, 0, 1) === "_") throw new Exception("Can not call system methods"); // Это что еще за юный хакер тут?
+		if (isset($_DATA['who'])) {
+			$who = $_DATA['who'];
+			$who = self::GetObjectByHandle($who);
+			assert(isset($who));
+		} else {
+			$who = null;
+		}
+
+		if (isset($_DATA['do'])) {
+			$do = $_DATA['do'];
+			if (substr($do, 0, 1) === "_") throw new Exception("Can not call system methods"); // Это что еще за юный хакер тут?
+		} else {
+			$do = null;
+		}
 
 		self::Log('system', 'DO ' . $who . '->' . $do);
 
@@ -1011,7 +1019,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 			}
 		}
 
-		if (isset($do)) {
+		if (isset($who, $do)) {
 			$params = [];
 			foreach ($_DATA as $key => $val) {
 				if ($key === 'do' || $key === 'who' || $key == 'view' || is_array($val)) {

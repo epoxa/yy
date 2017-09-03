@@ -7,7 +7,7 @@ services:
     expose:
       - "4444"
   php:
-    image: bitnami/php-fpm:latest
+    image: php:fpm
     hostname: php
     environment:
       YY_TEST_BROWSER: "$YY_TEST_BROWSER"
@@ -19,9 +19,9 @@ services:
     expose:
       - "9000"
     volumes:
-      - ./..:/app
+      - ./..:/var/www/html
   web:
-    image: bitnami/nginx:latest
+    image: nginx
     hostname: web
     links:
       - php
@@ -29,14 +29,13 @@ services:
       - "80"
       - "443"
     volumes:
-      - ./yy.nginx.conf:/bitnami/nginx/conf/vhosts/yy.conf
-      - ./..:/app
+      - ./nginx.conf.d:/etc/nginx/conf.d
+      - ./..:/var/www/html
   node:
-    image: "selenium/node-$YY_TEST_BROWSER"
+    image: "selenium/node-$YY_TEST_BROWSER:3.4"
     links:
       - web
       - hub
     environment:
       HUB_PORT_4444_TCP_ADDR: hub
       HUB_PORT_4444_TCP_PORT: 4444
-    entrypoint: ["/bin/sh", "-c", "sleep 3; /opt/bin/entry_point.sh"]
