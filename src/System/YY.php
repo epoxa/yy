@@ -1195,6 +1195,12 @@ class YY extends Robot // Странно, похоже, такое наслед�
 
             self::InternalTranslate($caption, $slug, $original);
 
+            if ($slug !== '' && isset(YY::$CURRENT_VIEW['TRANSLATOR'])) {
+                $stack = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 8);
+                $trace = md5(print_r($stack, true));
+                $attributes = [];
+                YY::$CURRENT_VIEW['TRANSLATOR']->registerTranslatable($trace, $slug, $original, $attributes);
+            }
         }
 
         return $caption;
