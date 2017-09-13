@@ -15,10 +15,21 @@ class BrowserTestCase extends PHPUnit_Extensions_Selenium2TestCase
      * @var PHPUnit_Extensions_Selenium2TestCase_ScreenshotListener $listener
      */
 	private $listener;
+    private $artifactDir;
+
+    protected function setArtifactFolder($dir)
+    {
+        if ($dir === $this->artifactDir) return;
+        $this->artifactDir = $dir;
+        if ($dir) {
+            $this->listener = new PHPUnit_Extensions_Selenium2TestCase_ScreenshotListener($dir);
+        } else {
+            $this->listener = null;
+        }
+    }
 
 	protected function setUp()
 	{
-		$this->listener = new PHPUnit_Extensions_Selenium2TestCase_ScreenshotListener(trim(`pwd`));
 		parent::setUp();
 	}
 
