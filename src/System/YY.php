@@ -657,7 +657,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 				}
 				if ($paramType) {
 					if ($isScript) {
-						$res .= $paramType . $paramName . ":'" . htmlspecialchars($paramValue) . "'";
+						$res .= $paramType . $paramName . ":" . htmlspecialchars(json_encode($paramValue, JSON_UNESCAPED_UNICODE)) . "";
 					} else {
 						if ($paramType) $res .= $paramType . $paramName . "=" . urlencode($paramValue);
 					}
@@ -700,7 +700,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
                     : htmlspecialchars($method);
             $script = 'go(' . self::GetHandle($robot) . ',\'' . $methodRepresentation . '\',{' . $otherParams . '})';
             if (isset($visual, $visual['confirm'])) {
-                $confirm = substr(json_encode('' . $visual['confirm']), 1, -1);
+                $confirm = substr(json_encode('' . str_replace('"', '', $visual['confirm'])), 1, -1);
                 unset($visual['confirm']);
                 $script = "if (confirm('$confirm')) " . $script;
             }
@@ -1022,7 +1022,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 				foreach ($val as $prop => $prop_val) {
 					if (substr($prop, 0, 1) === '#') {
 						$prop = substr($prop, 1);
-						$prop_val = $prop_val ? intval($prop_val) : null;
+						$prop_val = $prop_val ? floatval($prop_val) : null;
 					}
 					$obj[$prop] = $prop_val;
 				}
