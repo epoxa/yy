@@ -121,24 +121,33 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         }
         $yyid = $this->_YYID;
         $lockFileName = LOCK_DIR . $yyid . ".lock";
-        $fo = fopen($lockFileName, 'w');
-        if (!$fo) return false;
-        if ($lock = flock($fo, LOCK_EX)) {
-            self::$locks[$yyid] = $fo;
-            $this->properties[false] = [];
-            $this->properties[true] = [];
-            /** @var Data $myActualCopy */
-            $myActualCopy = self::_internalLoadObject($yyid);
-            if ($myActualCopy) {
-                $allKeys = $myActualCopy->_all_keys();
-                foreach($allKeys as $key) {
-                    $this[$key] = $myActualCopy->_DROP($key);
-                }
-            }
-            $this->modified = false;
-            YY::Log('system', 'LOCK: ' . $this->_full_name());
+        $fo = null;
+        for ($i = 0; $i < 200; $i++) {
+            $fo = fopen($lockFileName, 'w');
+            if ($fo) break;
+            usleep(50000);
         }
-        return $lock;
+        if (!$fo) {
+            throw new Exception('Can not acquire exclusive lock for ' . $this->_full_name());
+        }
+        $lock = flock($fo, LOCK_EX);
+        if (!$lock) {
+            throw new Exception('Can not acquire exclusive lock for ' . $this->_full_name());
+        }
+        self::$locks[$yyid] = $fo;
+        $this->properties[false] = [];
+        $this->properties[true] = [];
+        /** @var Data $myActualCopy */
+        $myActualCopy = self::_internalLoadObject($yyid);
+        if ($myActualCopy) {
+            $allKeys = $myActualCopy->_all_keys();
+            foreach($allKeys as $key) {
+                $this[$key] = $myActualCopy->_DROP($key);
+            }
+        }
+        $this->modified = false;
+        YY::Log('system', 'LOCK: ' . $this->_full_name());
+        return true;
     }
 
     public function _releaseExclusiveAccess()
@@ -152,6 +161,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         } else {
             YY::Log('error', 'Lock file absent for ' . $this);
         }
+        flock(self::$locks[$yyid], LOCK_UN);
         fclose(self::$locks[$yyid]);
         unset(self::$locks[$yyid]);
     }
