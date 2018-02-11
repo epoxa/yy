@@ -7,6 +7,8 @@ use YY\Core\Cache;
 use YY\Core\Data;
 use YY\Core\Importer;
 use YY\System\Exception\EReloadSignal;
+use YY\System\Log\DefaultLogger;
+use YY\System\Log\LogInterface;
 
 /**
  * @property Data CONFIG
@@ -36,18 +38,54 @@ class YY extends Robot // Странно, похоже, такое наслед�
 	static private $EXECUTE_AFTER;
     static private $EXECUTING_CLOSURE_MODE;
 
-	static public function Log($kind, $msg = null)
+    /**
+     * @var LogInterface $OUTGOING
+     */
+    static private $LOGGER;
+    static private $TEMP_LOGGER;
+
+    /**
+     * @param null|string $kind
+     * @param null|string $msg
+     *
+     * @return LogInterface
+     */
+    final static public function Log($kind = null, $msg = null)
 	{
-		if (DEBUG_MODE) { // TODO: Чой-то так? Кое-какие логи могут быть всегда, например, gatekeeper. Надо отдельно для каждого регулировать, видимо.
-			if ($msg === null) { // Отладочный вывод можно одним аргументом передавать
-				$msg = $kind;
-				$kind = 'debug';
-			}
-			Log::Log($kind, $msg);
-		}
+        if (self::$LOGGER) {
+            $logger = self::$LOGGER;
+        } else if (isset(self::$ME, self::$WORLD, self::$WORLD['SYSTEM'])) {
+            $logger = self::CreateLogger() or $logger = self::$WORLD['SYSTEM']->getLogger() or $logger = new DefaultLogger();
+            self::$LOGGER = $logger;
+            self::$TEMP_LOGGER = null;
+        } else if (self::$TEMP_LOGGER) {
+            $logger = self::$TEMP_LOGGER;
+        } else {
+            $logger = self::CreateLogger() or $logger = new DefaultLogger();
+            self::$TEMP_LOGGER = $logger;
+        }
+        assert(self::$LOGGER || self::$TEMP_LOGGER);
+        if ($kind || $msg) {
+            if ($msg === null) { // Debug messages can be passed in single argument
+                $msg = $kind;
+                $kind = 'debug';
+            } else if (!$kind) {
+                $kind = 'debug';
+            }
+            $logger->Log($kind, $msg);
+        }
+        return $logger;
 	}
 
-	static public function Config($way = null)
+    /**
+     * @return LogInterface
+     */
+    protected static function CreateLogger()
+    {
+        return null;
+    }
+
+    static public function Config($way = null)
 	{
 		return self::$WORLD['CONFIG']->_OFFSET($way);
 	}
@@ -161,7 +199,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 	{
 		YY::Log('system', 'Draw engine ' . $templateName);
 
-		$debugOutput = Log::GetScreenOutput();
+		$debugOutput = self::Log()->GetScreenOutput();
 		if (isset(self::$CURRENT_VIEW, self::$CURRENT_VIEW['ROBOT']) && is_object(self::$CURRENT_VIEW['ROBOT'])) {
 			self::$CURRENT_VIEW['ROBOT']['_debugOutput'] = $debugOutput;
 		}
@@ -394,7 +432,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
                     if (self::$CURRENT_VIEW && self::$CURRENT_VIEW->_DELETED) {
                         self::$CURRENT_VIEW = null; // In case of rebooting or reincarnation
                     }
-                    $debugOutput = Log::GetScreenOutput();
+                    $debugOutput = self::Log()->GetScreenOutput();
                     if (isset(self::$CURRENT_VIEW, self::$CURRENT_VIEW['ROBOT']) && is_object(self::$CURRENT_VIEW['ROBOT'])) {
                         self::$CURRENT_VIEW['ROBOT']['_debugOutput'] = $debugOutput;
                     }
