@@ -19,6 +19,6 @@ docker-compose -f docker/docker-compose-tests.yml exec -T php apt install unzip
 
 docker-compose -f docker/docker-compose-tests.yml exec -T php docker-php-ext-install pcntl
 
-docker-compose -f docker/docker-compose-tests.yml exec -T php composer update
+docker-compose -f docker/docker-compose-tests.yml exec -T php composer install
 
 docker-compose -f docker/docker-compose-tests.yml exec -T php vendor/bin/phpunit

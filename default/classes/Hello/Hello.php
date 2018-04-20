@@ -11,13 +11,14 @@ class Hello extends Robot
 	function _PAINT()
 	{
 		// Define extended control styles
+		// Really dirty code - just for explicit example
 
 		$phr = ['before' => '<br>&ndash;&nbsp;'];
 		$btn = ['class' => ['btn', 'btn-default', 'btn-small'], 'style' => ['margin-left' => '6px']];
 
 		// Draw dialog based on current robot state
 
-		echo YY::drawText($phr, "Hi! What is your name?");
+		echo $this->TXT("Hi! What is your name?", $phr);
 		if (empty($this['name'])) {
 			echo YY::drawInput($phr, YY::$ME, 'name');
 			echo YY::drawCommand($btn, 'Say', $this, 'setName');
