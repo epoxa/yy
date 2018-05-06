@@ -2,7 +2,7 @@
   "name": "epoxa/yy",
   "description": "Bad style PHP framework for lazy schoolboy developers",
   "minimum-stability": "stable",
-  "license": "free",
+  "license": "0BSD",
   "authors": [
     {
       "name": "epoxa",
@@ -14,6 +14,9 @@
        "YY\\": "src/",
        "YY\\Demo\\": "default/classes/"
     }
+  },
+  "require": {
+    "php": "~7.1"
   },
   "require-dev": {
     "phpunit/phpunit-selenium": "^3.0"
