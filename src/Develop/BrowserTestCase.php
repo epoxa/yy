@@ -35,7 +35,6 @@ class BrowserTestCase extends PHPUnit_Extensions_Selenium2TestCase
 
 	public function setUpPage()
 	{
-		$this->timeouts()->implicitWait(5000);
 		$this->installConsoleHook();
 	}
 
@@ -44,6 +43,15 @@ class BrowserTestCase extends PHPUnit_Extensions_Selenium2TestCase
 		if ($this->listener) {
 			$this->listener->addError($this, $e, null);
 		}
+        if ($this->artifactDir) {
+            $fName = $this->artifactDir . "/" . get_class($this) . '__' . $this->getName() . '__' . date('Y-m-d\TH-i-s') . '.log';
+            try {
+                $consoleOutput = $this->getConsoleMessages();
+                file_put_contents($fName, print_r($consoleOutput, true));
+            } catch(Exception $e) {
+                file_put_contents($fName, "Can not get console output: " . $e->getMessage());
+            }
+        }
 		parent::onNotSuccessfulTest($e);
 	}
 
@@ -62,11 +70,21 @@ class BrowserTestCase extends PHPUnit_Extensions_Selenium2TestCase
 (function() {
     if (window.getNewConsoleMessages) return; // Already installed
     var oldLog = console.log;
+    var oldError = console.error;
+    var oldWarn = console.warn;
     var messages = [];
     console.log = function (message) {
         messages.push(message);
-        // DO MESSAGE HERE.
         oldLog.apply(console, arguments);
+    };
+    console.error = function (message) {
+        messages.push(message);
+        oldError.apply(console, arguments);
+    };
+    console.warn = function (message) {
+        messages.push(message);
+        // DO MESSAGE HERE.
+        oldWarn.apply(console, arguments);
     };
     window.getNewConsoleMessages = function() {
       var r = messages;
