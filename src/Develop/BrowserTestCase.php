@@ -93,12 +93,44 @@ class BrowserTestCase extends PHPUnit_Extensions_Selenium2TestCase
 		} catch(Exception $e) {
 			return;
 		}
-		$this->waitUntil(function() {
-			return $this->isBlindDisplayed() ? null : true;
+        /** @var Exception $except */
+        $except = null;
+		$this->waitUntil(function() use ($except) {
+            try {
+                return $this->isBlindDisplayed() ? null : true;
+            } catch(Exception $e) {
+                if ($e->getCode() == 26 && strpos($e->getMessage(), 'unexpected alert open') === 0) {
+                    // Just skip it
+                } else {
+                    $except = $e;
+                }
+                return true;
+            }
 		}, 5000);
+        if ($except) {
+            throw $except;
+        }
 	}
 
-	protected function isElementPresent($how, $what)
+    public function alertIsPresent()
+    {
+        $this->waitForEngine();
+        return parent::alertIsPresent();
+    }
+
+    public function alertText($value = null)
+    {
+        $this->waitForEngine();
+        return parent::alertText($value);
+    }
+
+    public function acceptAlert()
+    {
+        $this->waitForEngine();
+        parent::acceptAlert();
+    }
+
+    protected function isElementPresent($how, $what)
 	{
 		$this->waitForEngine();
 		try {
