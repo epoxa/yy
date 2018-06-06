@@ -40,7 +40,7 @@ class BrowserTestCase extends PHPUnit_Extensions_Selenium2TestCase
 
     public function onNotSuccessfulTest($e)
 	{
-		if ($this->listener) {
+		if ($this->listener && $e instanceof Exception) {
 			$this->listener->addError($this, $e, null);
 		}
         if ($this->artifactDir) {
@@ -96,12 +96,12 @@ class BrowserTestCase extends PHPUnit_Extensions_Selenium2TestCase
 	}
 
 	protected function getConsoleMessages() {
-		return $this->exec('return window.getNewConsoleMessages()');
+		return $this->exec('return window.getNewConsoleMessages ? window.getNewConsoleMessages() : ""');
 	}
 
 	protected function isBlindDisplayed()
 	{
-		return $this->exec("return blind && blind.style.display == ''");
+		return $this->exec("return typeof blind !== 'undefined' && blind.style.display == ''");
 	}
 
 	public function waitForEngine()
@@ -113,7 +113,7 @@ class BrowserTestCase extends PHPUnit_Extensions_Selenium2TestCase
 		}
         /** @var Exception $except */
         $except = null;
-		$this->waitUntil(function() use ($except) {
+		$this->waitUntil(function() use (&$except) {
             try {
                 return $this->isBlindDisplayed() ? null : true;
             } catch(Exception $e) {
@@ -132,18 +132,21 @@ class BrowserTestCase extends PHPUnit_Extensions_Selenium2TestCase
 
     public function alertIsPresent()
     {
+        usleep(100000);
         $this->waitForEngine();
         return parent::alertIsPresent();
     }
 
     public function alertText($value = null)
     {
+        usleep(100000);
         $this->waitForEngine();
         return parent::alertText($value);
     }
 
     public function acceptAlert()
     {
+        usleep(100000);
         $this->waitForEngine();
         parent::acceptAlert();
     }

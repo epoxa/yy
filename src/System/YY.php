@@ -1000,7 +1000,9 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		if (self::$ME && !self::$ME->_DELETED) {
 			/** @var View $view */
 			foreach (self::$ME['VIEWS'] as $view) {
-				$view->robotDeleting($robot);
+                if ($view && !$view->_DELETED) {
+                    $view->robotDeleting($robot);
+                }
 			}
 		}
 	}
