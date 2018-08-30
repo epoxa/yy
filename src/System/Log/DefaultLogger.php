@@ -221,6 +221,7 @@ class DefaultLogger implements LogInterface
             $logFileName = $logFileNames[$log];
         } else {
             $dirName = $this->getUserLogDirName();
+            if ($dirName === false) return; // Log write cancelled
             $dirName = LOG_DIR . 'users/' . $dirName;
             if ($log) $dirName .= '/' . $log;
             $nativeFsDirName = Utils::ToNativeFilesystemEncoding($dirName);
@@ -255,11 +256,6 @@ class DefaultLogger implements LogInterface
     protected function getUserLogDirName()
     {
         return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-//        if (isset(YY::$ME, YY::$ME['curatorName'], YY::$ME['id'])) {
-//            $dirName = YY::$ME['curatorName'] . ' (' . YY::$ME['id'] . ') ' . $dirName;
-//            return $dirName;
-//        }
-//        return $dirName;
     }
 
     /**

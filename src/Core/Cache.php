@@ -49,7 +49,7 @@ class Cache
 		}
 		Data::FlushTempFiles();
 		if ($intermediate) {
-			Data::InitializeStorage(false);
+			Data::InitializeStorage(false); // TODO: Why?
 		}
 		YY::Log('core', 'flushed ' . $cnt . ' objects');
 	}
