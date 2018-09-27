@@ -12,6 +12,7 @@ use YY\System\Log\LogInterface;
 
 /**
  * @property Data CONFIG
+ * @property Data WORLD
  * @property Data VIEWS
  */
 class YY extends Robot // Странно, похоже, такое наследование позволяет вызвать защищенный метод _PAINT у (другого) экземпляра класса YY\System\Robot
