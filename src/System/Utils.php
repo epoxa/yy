@@ -68,11 +68,13 @@ class Utils
 	static public function IsSessionValid()
 	{
 		if (!isset($_COOKIE[COOKIE_NAME])) return false; // Простая проверка на то, что куки вообще отсутствуют, чтобы не начинать сессию
-		session_name(COOKIE_NAME);
-		session_set_cookie_params(DEFAULT_SESSION_LIFETIME, '/', DOMAIN_NAME);
-		@session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_name(COOKIE_NAME);
+            session_set_cookie_params(DEFAULT_SESSION_LIFETIME, '/', DOMAIN_NAME);
+            @session_start();
+        }
 		$sessionOk = isset($_SESSION);
-		$sessionOk = $sessionOk && (!$_SESSION['IP_CHECK'] || isset($_SESSION['IP']) && $_SERVER['REMOTE_ADDR'] == $_SESSION['IP']);
+		$sessionOk = $sessionOk && (empty($_SESSION['IP_CHECK']) || !$_SESSION['IP_CHECK'] || isset($_SESSION['IP']) && $_SERVER['REMOTE_ADDR'] == $_SESSION['IP']);
 		$sessionOk = $sessionOk && isset($_SESSION['DEAL_TIME']) && isset($_SESSION['TIMEOUT_INTERVAL'])
 			&& time() - $_SESSION['DEAL_TIME'] <= $_SESSION['TIMEOUT_INTERVAL'];
 		// TODO: Здесь также можно проверить корректность пути и параметров в запросе, частоту предыдущих запросов (хранить несколько последних в сессии),
