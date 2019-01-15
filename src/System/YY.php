@@ -295,7 +295,14 @@ class YY extends Robot // Странно, похоже, такое наслед�
 
 		self::LoadWorld();
 
-		self::$WORLD['SYSTEM']->started();
+        self::$RELOAD_URL = false;
+        self::$OUTGOING = new Data();
+        self::$ADD_HEADERS = [];
+        self::$EXECUTE_BEFORE = null;
+        self::$EXECUTE_AFTER = null; // По крайней мере, clientExecute может вызываться в обработчике, а не только в PAINT
+        self::$CURRENT_VIEW = null;
+
+        self::$WORLD['SYSTEM']->started();
 
 		self::$ME = null;
 
@@ -345,14 +352,6 @@ class YY extends Robot // Странно, похоже, такое наслед�
 			}
             $viewId = $_POST['view'];
 
-            self::$RELOAD_URL = false;
-            self::$OUTGOING = new Data();
-            self::$ADD_HEADERS = [];
-            self::$EXECUTE_BEFORE = null;
-            self::$EXECUTE_AFTER = null; // По крайней мере, clientExecute может вызываться в обработчике, а не только в PAINT
-
-            self::$CURRENT_VIEW = null;
-
             self::TryRestore();
 
             $isFirstPost = empty(YY::$ME) || !isset(YY::$ME['VIEWS'][$viewId]);
@@ -378,7 +377,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 				YY::$CURRENT_VIEW = $view;
 			} else if ($isFirstPost) {
 				try {
-					YY::createNewView($viewId);
+					YY::createNewView($viewId); // TODO: That's bad if client sends incorrect view string
 				} catch (EReloadSignal $e) {
 					Cache::Flush();
 					self::drawReload(); // Possible can lead to infinite reloading
