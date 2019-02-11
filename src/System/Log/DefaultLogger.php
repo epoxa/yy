@@ -11,7 +11,7 @@ class DefaultLogger implements LogInterface
     private $map
         = array(
 //    'time' => 'profile',
-//    'core' => 'debug',
+    'core' => 'debug',
 //    'import' => 'import',
 //    'system' => 'sys, debug',
             'debug' => 'debug, screen',
