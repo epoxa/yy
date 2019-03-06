@@ -472,6 +472,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         if (!$force) {
             $found_data = Cache::Find($YYID);
             if (isset($found_data)) {
+                YY::Log('system', "$found_data  found in cache");
                 return $found_data;
             }
         }
@@ -479,6 +480,9 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         if ($stored_data) {
             $stored_data->YYID = $YYID;
             Cache::RegisterData($stored_data);
+            YY::Log('system', "$stored_data loaded");
+        } else {
+            YY::Log('system, error', "$YYID load failed!");
         }
         return $stored_data;
     }

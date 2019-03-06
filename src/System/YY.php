@@ -321,7 +321,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
                 unset($_GET['me']);
             }
 
-			self::_GET($_GET);
+            self::_GET($_GET);
 
 			self::Log('system', '=========CHILD STOP=========');
 
