@@ -13,7 +13,7 @@ class DefaultLogger implements LogInterface
 //    'time' => 'profile',
     'core' => 'debug',
 //    'import' => 'import',
-    'system' => 'sys, debug',
+//    'system' => 'sys, debug',
             'debug' => 'debug, screen',
             'warning' => 'debug, error, screen',
             'error' => 'debug, error, screen',
