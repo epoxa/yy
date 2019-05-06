@@ -87,7 +87,7 @@ class Utils
 	{
 		$_SESSION = [];
 		if (isset($_COOKIE[COOKIE_NAME])) {
-			session_name(COOKIE_NAME);
+//			session_name(COOKIE_NAME); // TODO: Always error - Cannot change session name when session is active
 			if (session_status() === PHP_SESSION_ACTIVE) {
 				@session_destroy();
 			}
