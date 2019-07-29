@@ -760,6 +760,16 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         return $clone;
     }
 
+    public function _toArray()
+    {
+        $res = [];
+        foreach ($this->properties[false] as $key => $val) {
+            if (is_object($val)) $val = $val->_toArray();
+            $res[$key] = $val;
+        }
+        return $res;
+    }
+
     public function _all_keys()
     {
         return array_merge($this->_scalar_keys(), $this->_object_keys());
