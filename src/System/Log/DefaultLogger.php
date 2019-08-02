@@ -8,17 +8,16 @@ use YY\System\YY;
 class DefaultLogger implements LogInterface
 {
 
-    private $map
-        = array(
-//    'time' => 'profile',
-    'core' => 'debug',
-//    'import' => 'import',
-//    'system' => 'sys, debug',
-            'debug' => 'debug, screen',
-            'warning' => 'debug, error, screen',
-            'error' => 'debug, error, screen',
-            'sql' => 'debug',
-        );
+    private $map = [
+//        'time' => 'profile',
+//        'core' => 'debug',
+//        'import' => 'import',
+//        'system' => 'sys, debug',
+//        'debug' => 'debug, screen',
+//        'sql' => 'debug',
+        'warning' => 'debug, error, screen',
+        'error' => 'debug, error, screen',
+    ];
 
     function __construct($init = null)
     {
@@ -150,6 +149,8 @@ class DefaultLogger implements LogInterface
                 $this->directWrite('debug', 'HTTP ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI']);
                 $this->directWrite('debug', print_r(getallheaders(), true));
             }
+        }
+        if ($this->statCheck()) {
             $this->directWrite('debug', '--------------------');
             $this->directWrite('debug', $this->GetStatistics());
             $this->directWrite('debug', '--------------------');
@@ -248,6 +249,11 @@ class DefaultLogger implements LogInterface
             $was = $this->buffers[$log];
         } else $was = "";
         $this->buffers[$log] = $was . $message . "\n";
+    }
+
+    function statCheck()
+    {
+        return false;
     }
 
     /**

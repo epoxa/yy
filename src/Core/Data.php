@@ -20,21 +20,12 @@ use YY\System\YY;
 
 // TODO: Move error handler to core class
 
-const IGNORE_DBA_ERROR_TAIL = 'db4: Unable to establish lock';
-const IGNORE_LUA_ERROR_HEAD = 'Lua::eval(): corrupted Lua object';
-
 set_error_handler(function ($errno, $errstr, $errfile, $errline, $errcontext) {
-    if (
-        substr($errstr, -strlen(IGNORE_DBA_ERROR_TAIL)) === IGNORE_DBA_ERROR_TAIL
-        || substr($errstr, 0, strlen(IGNORE_LUA_ERROR_HEAD)) === IGNORE_LUA_ERROR_HEAD
-    ) {
-        // Just skip these known warnings
-    } else if ($errno != E_NOTICE) {
-        $msg = $errno . ': ' . $errfile . "(" . $errline . ")" . "\n" . $errstr;
-        YY::Log('error', $msg);
-        if (isset(YY::$WORLD, YY::$WORLD['SYSTEM'], YY::$WORLD['SYSTEM']['error'])) {
-            YY::$WORLD['SYSTEM']->error(['message' => $msg]);
-        }
+    if (!(error_reporting() & $errno)) return;
+    $msg = $errfile . "(" . $errline . ")" . "\n" . $errstr;
+    YY::Log('error', $msg);
+    if (isset(YY::$WORLD, YY::$WORLD['SYSTEM'], YY::$WORLD['SYSTEM']['error'])) {
+        YY::$WORLD['SYSTEM']->error(['message' => $msg]);
     }
     return false;
 });
@@ -123,8 +114,9 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         $lockFileName = LOCK_DIR . $yyid . ".lock";
         $fo = null;
         for ($i = 0; $i < 200; $i++) {
-            $fo = fopen($lockFileName, 'w');
+            $fo = @fopen($lockFileName, 'x');
             if ($fo) break;
+            YY::Log('system', 'WAIT ' . getmypid() . ': ' . $yyid);
             usleep(50000);
         }
         if (!$fo) {
@@ -146,20 +138,20 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
             }
         }
         $this->modified = false;
-        YY::Log('system', 'LOCK: ' . $this->_full_name());
+        YY::Log('system', 'LOCK ' . getmypid() . ': ' . $this->_full_name());
         return true;
     }
 
     public function _releaseExclusiveAccess()
     {
-        YY::Log('system', 'RELEASE: ' . $this->_full_name());
+        YY::Log('system', 'RELEASE ' . getmypid() . ': ' . $this->_full_name());
         $this->_flush();
         $yyid = $this->_YYID;
         $lockFileName = LOCK_DIR . $yyid . ".lock";
         if (file_exists($lockFileName)) {
             @unlink($lockFileName);
         } else {
-            YY::Log('error', 'Lock file absent for ' . $this);
+            YY::Log('error', 'Lock file absent in ' . getmypid() . ' for ' . $this . "\nSTACK:\n" . print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), true));
         }
         flock(self::$locks[$yyid], LOCK_UN);
         fclose(self::$locks[$yyid]);
