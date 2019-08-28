@@ -43,7 +43,6 @@ class YY extends Robot // Странно, похоже, такое наслед�
      * @var LogInterface $OUTGOING
      */
     static private $LOGGER;
-    static private $TEMP_LOGGER;
 
     /**
      * @param null|string $kind
@@ -56,16 +55,8 @@ class YY extends Robot // Странно, похоже, такое наслед�
         if (self::$LOGGER) {
             $logger = self::$LOGGER;
         } else if (isset(self::$ME, self::$WORLD, self::$WORLD['SYSTEM'])) {
-            $logger = self::CreateLogger() or $logger = self::$WORLD['SYSTEM']->getLogger() or $logger = new DefaultLogger();
-            self::$LOGGER = $logger;
-            self::$TEMP_LOGGER = null;
-        } else if (self::$TEMP_LOGGER) {
-            $logger = self::$TEMP_LOGGER;
-        } else {
-            $logger = self::CreateLogger() or $logger = new DefaultLogger();
-            self::$TEMP_LOGGER = $logger;
+            self::$LOGGER = $logger = self::$WORLD['SYSTEM']->getLogger() or new DefaultLogger();
         }
-        assert(self::$LOGGER || self::$TEMP_LOGGER);
         if ($kind || $msg) {
             if ($msg === null) { // Debug messages can be passed in single argument
                 $msg = $kind;
@@ -73,18 +64,14 @@ class YY extends Robot // Странно, похоже, такое наслед�
             } else if (!$kind) {
                 $kind = 'debug';
             }
-            $logger->Log($kind, $msg);
+            if ($logger) {
+                $logger->Log($kind, $msg);
+            } else if ($kind === 'error') {
+                error_log($msg);
+            }
         }
         return $logger;
 	}
-
-    /**
-     * @return LogInterface
-     */
-    protected static function CreateLogger()
-    {
-        return null;
-    }
 
     static public function Config($way = null)
 	{
