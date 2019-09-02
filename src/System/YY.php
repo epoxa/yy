@@ -56,6 +56,8 @@ class YY extends Robot // Странно, похоже, такое наслед�
             $logger = self::$LOGGER;
         } else if (isset(self::$ME, self::$WORLD, self::$WORLD['SYSTEM'])) {
             self::$LOGGER = $logger = self::$WORLD['SYSTEM']->getLogger() or new DefaultLogger();
+        } else {
+            $logger = null;
         }
         if ($kind || $msg) {
             if ($msg === null) { // Debug messages can be passed in single argument
