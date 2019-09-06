@@ -474,7 +474,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
             Cache::RegisterData($stored_data);
             YY::Log('system', "$stored_data loaded");
         } else {
-            YY::Log('system, error', "$YYID load failed!");
+            YY::Log('system', "$YYID load failed!");
         }
         return $stored_data;
     }
