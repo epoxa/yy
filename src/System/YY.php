@@ -43,6 +43,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
      * @var LogInterface $OUTGOING
      */
     static private $LOGGER;
+    static private $LOG_IN_PROGRESS = false;
 
     /**
      * @param null|string $kind
@@ -52,27 +53,33 @@ class YY extends Robot // Странно, похоже, такое наслед�
      */
     final static public function Log($kind = null, $msg = null)
 	{
-        if (self::$LOGGER) {
-            $logger = self::$LOGGER;
-        } else if (isset(self::$ME, self::$WORLD, self::$WORLD['SYSTEM'])) {
-            self::$LOGGER = $logger = self::$WORLD['SYSTEM']->getLogger() or new DefaultLogger();
-        } else {
-            $logger = null;
-        }
-        if ($kind || $msg) {
-            if ($msg === null) { // Debug messages can be passed in single argument
-                $msg = $kind;
-                $kind = 'debug';
-            } else if (!$kind) {
-                $kind = 'debug';
+	    if (self::$LOG_IN_PROGRESS) return null;
+	    self::$LOG_IN_PROGRESS = true;
+        try {
+            if (self::$LOGGER) {
+                $logger = self::$LOGGER;
+            } else if (isset(self::$WORLD, self::$WORLD['SYSTEM'])) {
+                self::$LOGGER = $logger = self::$WORLD['SYSTEM']->getLogger() or new DefaultLogger();
+            } else {
+                $logger = null;
             }
-            if ($logger) {
-                $logger->Log($kind, $msg);
-            } else if ($kind === 'error') {
-                error_log($msg);
+            if ($kind || $msg) {
+                if ($msg === null) { // Debug messages can be passed in single argument
+                    $msg = $kind;
+                    $kind = 'debug';
+                } else if (!$kind) {
+                    $kind = 'debug';
+                }
+                if ($logger) {
+                    $logger->Log($kind, $msg);
+                } else if ($kind === 'error') {
+                    error_log($msg);
+                }
             }
+            return $logger;
+        } finally {
+            self::$LOG_IN_PROGRESS = false;
         }
-        return $logger;
 	}
 
     static public function Config($way = null)
