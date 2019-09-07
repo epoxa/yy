@@ -59,7 +59,9 @@ class YY extends Robot // Странно, похоже, такое наслед�
             if (self::$LOGGER) {
                 $logger = self::$LOGGER;
             } else if (isset(self::$WORLD, self::$WORLD['SYSTEM'])) {
-                self::$LOGGER = $logger = self::$WORLD['SYSTEM']->getLogger() or new DefaultLogger();
+                $logger = self::$WORLD['SYSTEM']->getLogger();
+                if (!$logger) $logger = new DefaultLogger();
+                self::$LOGGER = $logger;
             } else {
                 $logger = null;
             }
