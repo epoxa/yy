@@ -355,7 +355,11 @@ class YY extends Robot // Странно, похоже, такое наслед�
             $isFirstPost = empty(YY::$ME) || !isset(YY::$ME['VIEWS'][$viewId]);
 
             if ($isFirstPost) {
-                assert(count($_POST) === 1);
+                if (count($_POST) !== 1) {
+                    YY::Log('system', 'Correct incarnation absent for session. Reload the view.');
+                    self::drawReload();
+                    return;
+                };
                 self::$WORLD['SYSTEM']->incarnationRequired();
                 if (!isset(self::$ME)) {
                     YY::createNewIncarnation();

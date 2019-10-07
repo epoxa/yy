@@ -60,6 +60,11 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
     private $_state;
     private $iterator_index = null;
 
+    /**
+     * Data constructor.
+     * @param array|Data|Ref|null $init
+     * @throws Exception
+     */
     public function __construct($init = null)
     {
         $this->modified = true;
