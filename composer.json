@@ -16,9 +16,8 @@
     }
   },
   "require": {
-    "php": "~7.1"
+    "php": "^7"
   },
   "require-dev": {
-    "phpunit/phpunit-selenium": "^3.0"
   }
 }
