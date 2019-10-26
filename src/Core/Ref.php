@@ -21,7 +21,7 @@ class Ref implements Serializable, Iterator, ArrayAccess, Countable
 	private $YYID;
 	private $_isOwner;
 
-	public function __construct(Data $toData, $lock)
+	public function __construct($toData, $lock)
 	{
 		if ($toData) {
 			$this->data = $toData;

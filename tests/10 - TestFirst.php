@@ -11,6 +11,7 @@ class TestFirst extends BrowserTestCase
 		$this->setBrowserUrl(getenv('YY_TEST_BASE_URL')); // http://yy.local/
 		$this->setHost(getenv('YY_TEST_SELENIUM_HOST')); // 127.0.0.1
 		$this->setPort((int)getenv('YY_TEST_SELENIUM_PORT')); // 4444
+        $this->setArtifactFolder(__DIR__ . '/../default/runtime');
 	}
 
 	public function setUpPage()

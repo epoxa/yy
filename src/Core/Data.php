@@ -20,21 +20,12 @@ use YY\System\YY;
 
 // TODO: Move error handler to core class
 
-const IGNORE_DBA_ERROR_TAIL = 'db4: Unable to establish lock';
-const IGNORE_LUA_ERROR_HEAD = 'Lua::eval(): corrupted Lua object';
-
 set_error_handler(function ($errno, $errstr, $errfile, $errline, $errcontext) {
-    if (
-        substr($errstr, -strlen(IGNORE_DBA_ERROR_TAIL)) === IGNORE_DBA_ERROR_TAIL
-        || substr($errstr, 0, strlen(IGNORE_LUA_ERROR_HEAD)) === IGNORE_LUA_ERROR_HEAD
-    ) {
-        // Just skip these known warnings
-    } else if ($errno != E_NOTICE) {
-        $msg = $errno . ': ' . $errfile . "(" . $errline . ")" . "\n" . $errstr;
-        YY::Log('error', $msg);
-        if (isset(YY::$WORLD, YY::$WORLD['SYSTEM'], YY::$WORLD['SYSTEM']['error'])) {
-            YY::$WORLD['SYSTEM']->error(['message' => $msg]);
-        }
+    if (!(error_reporting() & $errno)) return;
+    $msg = $errfile . "(" . $errline . ")" . "\n" . $errstr;
+    YY::Log('error', $msg);
+    if (isset(YY::$WORLD, YY::$WORLD['SYSTEM'], YY::$WORLD['SYSTEM']['error'])) {
+        YY::$WORLD['SYSTEM']->error(['message' => $msg]);
     }
     return false;
 });
@@ -69,6 +60,11 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
     private $_state;
     private $iterator_index = null;
 
+    /**
+     * Data constructor.
+     * @param array|Data|Ref|null $init
+     * @throws Exception
+     */
     public function __construct($init = null)
     {
         $this->modified = true;
@@ -123,8 +119,9 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         $lockFileName = LOCK_DIR . $yyid . ".lock";
         $fo = null;
         for ($i = 0; $i < 200; $i++) {
-            $fo = fopen($lockFileName, 'w');
+            $fo = @fopen($lockFileName, 'x');
             if ($fo) break;
+            YY::Log('system', 'WAIT ' . getmypid() . ': ' . $yyid);
             usleep(50000);
         }
         if (!$fo) {
@@ -146,20 +143,20 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
             }
         }
         $this->modified = false;
-        YY::Log('system', 'LOCK: ' . $this->_full_name());
+        YY::Log('system', 'LOCK ' . getmypid() . ': ' . $this->_full_name());
         return true;
     }
 
     public function _releaseExclusiveAccess()
     {
-        YY::Log('system', 'RELEASE: ' . $this->_full_name());
+        YY::Log('system', 'RELEASE ' . getmypid() . ': ' . $this->_full_name());
         $this->_flush();
         $yyid = $this->_YYID;
         $lockFileName = LOCK_DIR . $yyid . ".lock";
         if (file_exists($lockFileName)) {
             @unlink($lockFileName);
         } else {
-            YY::Log('error', 'Lock file absent for ' . $this);
+            YY::Log('error', 'Lock file absent in ' . getmypid() . ' for ' . $this . "\nSTACK:\n" . print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), true));
         }
         flock(self::$locks[$yyid], LOCK_UN);
         fclose(self::$locks[$yyid]);
@@ -472,6 +469,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         if (!$force) {
             $found_data = Cache::Find($YYID);
             if (isset($found_data)) {
+                YY::Log('system', "$found_data  found in cache");
                 return $found_data;
             }
         }
@@ -479,6 +477,9 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         if ($stored_data) {
             $stored_data->YYID = $YYID;
             Cache::RegisterData($stored_data);
+            YY::Log('system', "$stored_data loaded");
+        } else {
+            YY::Log('system', "$YYID load failed!");
         }
         return $stored_data;
     }
@@ -535,39 +536,6 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         }
     }
 
-    public function offsetGet($offset)
-    {
-
-        $is_obj = is_object($offset);
-        if ($is_obj) {
-            $offset = $offset->_YYID;
-            // TODO: Надо определять, не удален ли сам этот объект, использующйся в качестве индекса
-        }
-
-        if (array_key_exists($offset, $this->properties[$is_obj])) {
-            $res = $this->properties[$is_obj][$offset];
-            if ($res instanceof Ref && !$res->_OWNER) {
-                // Разберемся, не удален ли объект.
-                if (!self::_exists($res->_YYID)) {
-                    $res = null;
-                    // Оптимизируем на будущее. Может будет сохранено, а может, оптимизация только на текущий запрос.
-                    $this->properties[$is_obj][$offset] = null;
-                }
-            }
-            return $res;
-        } else {
-            $msg = "Property '$offset' absent in " . $this . '. Call stack:';
-            $stack = debug_backtrace();
-            foreach ($stack as $ctx) {
-                if (isset($ctx['file'])) {
-                    $msg .= "\n$ctx[file]($ctx[line])";
-                }
-            }
-            throw new Exception($msg);
-        }
-
-    }
-
     private static function _exists($YYID)
     {
         $found_data = Cache::Find($YYID);
@@ -579,68 +547,6 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
                 file_exists($fileName) && filesize($fileName)
                 || self::$db && dba_exists($YYID, self::$db);
         }
-    }
-
-    public function offsetSet($offset, $value)
-    {
-
-        // Разбираемся с присваиваемым значением
-
-        if (is_array($value)) { // Массивы оборачиваем в объекты
-            $value = new Data($value);
-        }
-        if ($value instanceof Data) { // Храним всегда только ссылки на объекты
-            $value = $value->_REF;
-            // TODO: В случае получения здесь владеющей ссылки ($value->_OWNER === true)
-            // TODO: нужно либо убедиться, что нет рекурсии (методом прохода по вводимому новому свойству parent),
-            // TODO: либо убедиться, что нет рекурсии (методом полного рекурсивного обхода всех владеющих дочерних ссылок),
-            // TODO: либо не делать ничего, но ввести периодический процесс удаления образующихся изолированных циклов.
-            // TODO: А лучше всего - показать, что цикл не может возникнуть .
-            /*
-             * $first = new Data();
-             * $second = new Data();
-             * $first->prop = $second;
-             * $second->prop = $first;
-             * TODO: Как избавиться от такой рекурсии?
-             */
-        } else if ($value instanceof Ref && $value->_OWNER) { // Причем только копии владеющей ссылки
-            $value = new Ref($value->_DAT, false);
-        } else if (is_object($value) && !($value instanceof Ref)) {
-            throw new Exception('Invalid property value: ' . get_class($value));
-        }
-
-        // Разбираемся с типом индекса
-
-        $is_obj = is_object($offset);
-        if ($is_obj) {
-            $offset = $offset->_YYID;
-        }
-
-        // Если не добавление к массиву, то учитываем старое значение свойства.
-        // Во-первых, если оно уже равно присваиваемому, то незачем модифицировать объект,
-        // и, во-вторых, если оно - владеющая ссылка, то надо прибить старый объект.
-
-        if ($offset !== null) {
-            $propertyAlreadyExists = array_key_exists($offset, $this->properties[$is_obj]);
-            if ($propertyAlreadyExists) {
-                $old_value = $this->properties[$is_obj][$offset];
-                //          if ($old_value instanceof \YY\Core\Ref && !$old_value->_OWNER) { // Нахрена это было в __get, совершенно непонятно
-                //            $old_value = $this[$name];
-                //          }
-                if (self::_isEqual($old_value, $value)) {
-                    return;
-                }
-                self::_checkDeleteOwnerRef($old_value, $this, $offset);
-            }
-        }
-
-        $this->modified = true;
-        if ($offset === null) {
-            $this->properties[false][] = $value;
-        } else {
-            $this->properties[$is_obj][$offset] = $value;
-        }
-
     }
 
     public function __isset($name)
@@ -756,6 +662,16 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         return $clone;
     }
 
+    public function _toArray()
+    {
+        $res = [];
+        foreach ($this->properties[false] as $key => $val) {
+            if (is_object($val)) $val = $val->_toArray();
+            $res[$key] = $val;
+        }
+        return $res;
+    }
+
     public function _all_keys()
     {
         return array_merge($this->_scalar_keys(), $this->_object_keys());
@@ -765,10 +681,6 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
     {
         return array_keys($this->properties[false]);
     }
-
-    ///////////////////////
-    // Iterator
-    ///////////////////////
 
     // TODO: Оптимизировать полностью! И разобраться, можно ли включить объектные ключи
 
@@ -845,6 +757,10 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         return true;
     }
 
+    ///////////////////////
+    // Iterator
+    ///////////////////////
+
     public function current()
     {
         if ($this->valid()) {
@@ -876,10 +792,6 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
             return null;
         }
     }
-
-    ///////////////////////
-    // ArrayAccess
-    ///////////////////////
 
     public function rewind()
     {
@@ -914,6 +826,10 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
             $this->iterator_index = null;
         }
     }
+
+    ///////////////////////
+    // ArrayAccess
+    ///////////////////////
 
     /**
      * Вызывается при проверке isset(), и поэтому раньше было так:
@@ -954,6 +870,101 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         unset($this->properties[$is_obj][$offset]);
 
         $this->modified = true;
+    }
+
+    public function offsetGet($offset)
+    {
+
+        $is_obj = is_object($offset);
+        if ($is_obj) {
+            $offset = $offset->_YYID;
+            // TODO: Надо определять, не удален ли сам этот объект, использующйся в качестве индекса
+        }
+
+        if (array_key_exists($offset, $this->properties[$is_obj])) {
+            $res = $this->properties[$is_obj][$offset];
+            if ($res instanceof Ref && !$res->_OWNER) {
+                // Разберемся, не удален ли объект.
+                if (!self::_exists($res->_YYID)) {
+                    $res = null;
+                    // Оптимизируем на будущее. Может будет сохранено, а может, оптимизация только на текущий запрос.
+                    $this->properties[$is_obj][$offset] = null;
+                }
+            }
+            return $res;
+        } else {
+            $msg = "Property '$offset' absent in " . $this . '. Call stack:';
+            $stack = debug_backtrace();
+            foreach ($stack as $ctx) {
+                if (isset($ctx['file'])) {
+                    $msg .= "\n$ctx[file]($ctx[line])";
+                }
+            }
+            throw new Exception($msg);
+        }
+
+    }
+
+    public function offsetSet($offset, $value)
+    {
+
+        // Разбираемся с присваиваемым значением
+
+        if (is_array($value)) { // Массивы оборачиваем в объекты
+            $value = new Data($value);
+        }
+        if ($value instanceof Data) { // Храним всегда только ссылки на объекты
+            $value = $value->_REF;
+            // TODO: В случае получения здесь владеющей ссылки ($value->_OWNER === true)
+            // TODO: нужно либо убедиться, что нет рекурсии (методом прохода по вводимому новому свойству parent),
+            // TODO: либо убедиться, что нет рекурсии (методом полного рекурсивного обхода всех владеющих дочерних ссылок),
+            // TODO: либо не делать ничего, но ввести периодический процесс удаления образующихся изолированных циклов.
+            // TODO: А лучше всего - показать, что цикл не может возникнуть .
+            /*
+             * $first = new Data();
+             * $second = new Data();
+             * $first->prop = $second;
+             * $second->prop = $first;
+             * TODO: Как избавиться от такой рекурсии?
+             */
+        } else if ($value instanceof Ref && $value->_OWNER) { // Причем только копии владеющей ссылки
+            $value = new Ref($value->_DAT, false);
+        } else if (is_object($value) && !($value instanceof Ref)) {
+            throw new Exception('Invalid property value: ' . get_class($value));
+        }
+
+        // Разбираемся с типом индекса
+
+        $is_obj = is_object($offset);
+        if ($is_obj) {
+            $offset = $offset->_YYID;
+        }
+
+        // Если не добавление к массиву, то учитываем старое значение свойства.
+        // Во-первых, если оно уже равно присваиваемому, то незачем модифицировать объект,
+        // и, во-вторых, если оно - владеющая ссылка, то надо прибить старый объект.
+
+        if ($offset !== null) {
+            $propertyAlreadyExists = array_key_exists($offset, $this->properties[$is_obj]);
+            if ($propertyAlreadyExists) {
+                $old_value = $this->properties[$is_obj][$offset];
+                //          if ($old_value instanceof \YY\Core\Ref && !$old_value->_OWNER) { // Нахрена это было в __get, совершенно непонятно
+                //            $old_value = $this[$name];
+                //          }
+                if (self::_isEqual($old_value, $value)) {
+                    return;
+                }
+                self::_checkDeleteOwnerRef($old_value, $this, $offset);
+            }
+        }
+
+        $this->modified = true;
+        if ($offset === null) {
+            $this->properties[false][] = $value;
+        } else {
+            $this->properties[$is_obj][$offset] = $value;
+        }
+
     }
 
     ///////////////////////

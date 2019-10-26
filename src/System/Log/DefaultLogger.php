@@ -7,18 +7,27 @@ use YY\System\YY;
 
 class DefaultLogger implements LogInterface
 {
+    private $map = [
+//        'time' => 'profile',
+//        'core' => 'debug',
+//        'import' => 'import',
+//        'system' => 'sys, debug',
+//        'sql' => 'debug',
+        'debug' => 'debug, screen',
+        'warning' => 'debug, error, screen',
+        'error' => 'debug, error, screen',
+    ];
 
-    private $map
-        = array(
-//    'time' => 'profile',
-//    'core' => 'debug',
-//    'import' => 'import',
-//    'system' => 'sys, debug',
-            'debug' => 'debug, screen',
-            'warning' => 'debug, error, screen',
-            'error' => 'debug, error, screen',
-            'sql' => 'debug',
-        );
+    static private $disabled = false;
+    private $logFileNames = [];
+
+    private $logDir = LOG_DIR;
+    private $screenDebugText = '';
+    private $started = null;
+    private $buffers = [];
+    private $profiles = [];
+    private $currentProfile = null;
+    private $currentProfileStarted = null;
 
     function __construct($init = null)
     {
@@ -27,14 +36,14 @@ class DefaultLogger implements LogInterface
         }
     }
 
-    static private $disabled = false;
-    private $logDir = LOG_DIR;
-    private $screenDebugText = '';
-    private $started = null;
-    private $buffers = [];
-    private $profiles = [];
-    private $currentProfile = null;
-    private $currentProfileStarted = null;
+    public function Reset()
+    {
+        $this->started = null;
+        $this->finalize();
+        $this->buffers = [];
+        $this->profiles = [];
+        $this->logFileNames = [];
+    }
 
     static public function Disable()
     {
@@ -60,20 +69,20 @@ class DefaultLogger implements LogInterface
         $logs = [];
         foreach ($kind as $k) {
             if (isset($this->map[trim($k)])) {
-                $log = $this->map[trim($k)];
-                if ($log && !is_array($log)) $log = explode(',', $log);
-                if ($log) {
-                    foreach ($log as $f) {
+                $journal = $this->map[trim($k)];
+                if ($journal && !is_array($journal)) $journal = explode(',', $journal);
+                if ($journal) {
+                    foreach ($journal as $f) {
                         $logs[trim($f)] = null;
                     }
                 }
             }
         }
-        foreach ($logs as $log => $dummy) {
-            $conditionMethod = $log . 'Check';
+        foreach ($logs as $journal => $dummy) {
+            $conditionMethod = $journal . 'Check';
             $needWrite = method_exists($this, $conditionMethod) && $this->$conditionMethod();
             if (!$needWrite) continue;
-            $writeMethod = $log . 'Write';
+            $writeMethod = $journal . 'Write';
             method_exists($this, $writeMethod) && $this->$writeMethod($message);
         }
     }
@@ -150,6 +159,8 @@ class DefaultLogger implements LogInterface
                 $this->directWrite('debug', 'HTTP ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI']);
                 $this->directWrite('debug', print_r(getallheaders(), true));
             }
+        }
+        if ($this->statCheck()) {
             $this->directWrite('debug', '--------------------');
             $this->directWrite('debug', $this->GetStatistics());
             $this->directWrite('debug', '--------------------');
@@ -209,27 +220,26 @@ class DefaultLogger implements LogInterface
     }
 
     /**
-     * @param string $log
+     * @param string $journal
      * @param string $message
      *
      * @throws Exception
      */
-    protected function directWrite($log, $message)
+    protected function directWrite($journal, $message)
     {
-        static $logFileNames = [];
-        if (isset($logFileNames[$log])) {
-            $logFileName = $logFileNames[$log];
+        if (isset($this->logFileNames[$journal])) {
+            $logFileName = $this->logFileNames[$journal];
         } else {
-            $dirName = $this->getUserLogDirName();
-            $dirName = LOG_DIR . 'users/' . $dirName;
-            if ($log) $dirName .= '/' . $log;
+            $dirName = $this->getUserLogDirName($journal);
+            if ($dirName === false) return; // Log write cancelled
+            $dirName = LOG_DIR . $dirName;
             $nativeFsDirName = Utils::ToNativeFilesystemEncoding($dirName);
             if (!file_exists($nativeFsDirName)) {
                 mkdir($nativeFsDirName, 0770, true);
             }
-            $logFileName = $this->getViewLogFileName();
+            $logFileName = $this->getViewLogFileName($journal);
             $logFileName = $nativeFsDirName . '/' . Utils::toNativeFilesystemEncoding(mb_substr($logFileName, 0, 150));
-            $logFileNames[$log] = $logFileName;
+            $this->logFileNames[$journal] = $logFileName;
         }
 //        file_put_contents(LOG_DIR . 'last-debug-name.txt', $logFileName);
         $f = fopen($logFileName, 'a');
@@ -249,29 +259,27 @@ class DefaultLogger implements LogInterface
         $this->buffers[$log] = $was . $message . "\n";
     }
 
-    /**
-     * @return string
-     */
-    protected function getUserLogDirName()
+    function statCheck()
     {
-        return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-//        if (isset(YY::$ME, YY::$ME['curatorName'], YY::$ME['id'])) {
-//            $dirName = YY::$ME['curatorName'] . ' (' . YY::$ME['id'] . ') ' . $dirName;
-//            return $dirName;
-//        }
-//        return $dirName;
+        return false;
     }
 
     /**
      * @return string
      */
-    protected function getViewLogFileName()
+    protected function getUserLogDirName($journal = null)
+    {
+        $path = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        if ($journal) $path .= "/$journal";
+        return "users/$path";
+    }
+
+    /**
+     * @return string
+     */
+    protected function getViewLogFileName($journal = null)
     {
         $logFileName = date('Y-m-d H.i.s', isset(YY::$CURRENT_VIEW, YY::$CURRENT_VIEW['created']) ? YY::$CURRENT_VIEW['created'] : time());
-//        if (isset(YY::$CURRENT_VIEW, YY::$CURRENT_VIEW['page'])) {
-//            $page = YY::$CURRENT_VIEW['page'];
-//            $logFileName .= ' (' . $page['siteName'] . ') ' . $page['title'];
-//        }
         $logFileName = preg_replace('/[^\p{L}\d\s\-\_\!\.\()]/u', '', $logFileName);
         return $logFileName;
     }

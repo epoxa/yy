@@ -12,6 +12,7 @@ use YY\System\Log\LogInterface;
 
 /**
  * @property Data CONFIG
+ * @property Data WORLD
  * @property Data VIEWS
  */
 class YY extends Robot // Странно, похоже, такое наследование позволяет вызвать защищенный метод _PAINT у (другого) экземпляра класса YY\System\Robot
@@ -42,7 +43,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
      * @var LogInterface $OUTGOING
      */
     static private $LOGGER;
-    static private $TEMP_LOGGER;
+    static private $LOG_IN_PROGRESS = false;
 
     /**
      * @param null|string $kind
@@ -52,38 +53,36 @@ class YY extends Robot // Странно, похоже, такое наслед�
      */
     final static public function Log($kind = null, $msg = null)
 	{
-        if (self::$LOGGER) {
-            $logger = self::$LOGGER;
-        } else if (isset(self::$ME, self::$WORLD, self::$WORLD['SYSTEM'])) {
-            $logger = self::CreateLogger() or $logger = self::$WORLD['SYSTEM']->getLogger() or $logger = new DefaultLogger();
-            self::$LOGGER = $logger;
-            self::$TEMP_LOGGER = null;
-        } else if (self::$TEMP_LOGGER) {
-            $logger = self::$TEMP_LOGGER;
-        } else {
-            $logger = self::CreateLogger() or $logger = new DefaultLogger();
-            self::$TEMP_LOGGER = $logger;
-        }
-        assert(self::$LOGGER || self::$TEMP_LOGGER);
-        if ($kind || $msg) {
-            if ($msg === null) { // Debug messages can be passed in single argument
-                $msg = $kind;
-                $kind = 'debug';
-            } else if (!$kind) {
-                $kind = 'debug';
+	    if (self::$LOG_IN_PROGRESS) return null;
+	    self::$LOG_IN_PROGRESS = true;
+        try {
+            if (self::$LOGGER) {
+                $logger = self::$LOGGER;
+            } else if (isset(self::$WORLD, self::$WORLD['SYSTEM'])) {
+                $logger = self::$WORLD['SYSTEM']->getLogger();
+                if (!$logger) $logger = new DefaultLogger();
+                self::$LOGGER = $logger;
+            } else {
+                $logger = null;
             }
-            $logger->Log($kind, $msg);
+            if ($kind || $msg) {
+                if ($msg === null) { // Debug messages can be passed in single argument
+                    $msg = $kind;
+                    $kind = 'debug';
+                } else if (!$kind) {
+                    $kind = 'debug';
+                }
+                if ($logger) {
+                    $logger->Log($kind, $msg);
+                } else if ($kind === 'error') {
+                    error_log($msg);
+                }
+            }
+            return $logger;
+        } finally {
+            self::$LOG_IN_PROGRESS = false;
         }
-        return $logger;
 	}
-
-    /**
-     * @return LogInterface
-     */
-    protected static function CreateLogger()
-    {
-        return null;
-    }
 
     static public function Config($way = null)
 	{
@@ -294,7 +293,14 @@ class YY extends Robot // Странно, похоже, такое наслед�
 
 		self::LoadWorld();
 
-		self::$WORLD['SYSTEM']->started();
+        self::$RELOAD_URL = false;
+        self::$OUTGOING = new Data();
+        self::$ADD_HEADERS = [];
+        self::$EXECUTE_BEFORE = null;
+        self::$EXECUTE_AFTER = null; // По крайней мере, clientExecute может вызываться в обработчике, а не только в PAINT
+        self::$CURRENT_VIEW = null;
+
+        self::$WORLD['SYSTEM']->started();
 
 		self::$ME = null;
 
@@ -313,7 +319,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
                 unset($_GET['me']);
             }
 
-			self::_GET($_GET);
+            self::_GET($_GET);
 
 			self::Log('system', '=========CHILD STOP=========');
 
@@ -344,20 +350,16 @@ class YY extends Robot // Странно, похоже, такое наслед�
 			}
             $viewId = $_POST['view'];
 
-            self::$RELOAD_URL = false;
-            self::$OUTGOING = new Data();
-            self::$ADD_HEADERS = [];
-            self::$EXECUTE_BEFORE = null;
-            self::$EXECUTE_AFTER = null; // По крайней мере, clientExecute может вызываться в обработчике, а не только в PAINT
-
-            self::$CURRENT_VIEW = null;
-
             self::TryRestore();
 
             $isFirstPost = empty(YY::$ME) || !isset(YY::$ME['VIEWS'][$viewId]);
 
             if ($isFirstPost) {
-                assert(count($_POST) === 1);
+                if (count($_POST) !== 1) {
+                    YY::Log('system', 'Correct incarnation absent for session. Reload the view.');
+                    self::drawReload();
+                    return;
+                };
                 self::$WORLD['SYSTEM']->incarnationRequired();
                 if (!isset(self::$ME)) {
                     YY::createNewIncarnation();
@@ -377,7 +379,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 				YY::$CURRENT_VIEW = $view;
 			} else if ($isFirstPost) {
 				try {
-					YY::createNewView($viewId);
+					YY::createNewView($viewId); // TODO: That's bad if client sends incorrect view string
 				} catch (EReloadSignal $e) {
 					Cache::Flush();
 					self::drawReload(); // Possible can lead to infinite reloading
@@ -1000,7 +1002,9 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		if (self::$ME && !self::$ME->_DELETED) {
 			/** @var View $view */
 			foreach (self::$ME['VIEWS'] as $view) {
-				$view->robotDeleting($robot);
+                if ($view && !$view->_DELETED) {
+                    $view->robotDeleting($robot);
+                }
 			}
 		}
 	}
