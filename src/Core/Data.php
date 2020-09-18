@@ -694,7 +694,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
     }
 
     /**
-     * @param $from Data
+     * @param $from Data|array
      *
      * @throws Exception
      */
