@@ -457,6 +457,14 @@ class YY extends Robot // Странно, похоже, такое наслед�
                         } catch (\Throwable $e2) {
                             YY::Log('error', $e2->getMessage());
                         }
+                    } else {
+                        // Default exception handling
+                        $msg = 'Unexpected error';
+                        if (DEBUG_MODE && DEBUG_ALLOWED_IP) {
+                            $msg = $e->getMessage();
+                        }
+                        self::drawReload($msg);
+                        return;
                     }
                 }
             }
