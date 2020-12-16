@@ -453,12 +453,12 @@ class YY extends Robot // Странно, похоже, такое наслед�
                             ]);
                         } catch (EReloadSignal $eReload) {
                             self::drawReload($eReload->getMessage());
+                            return;
                         } catch (\Throwable $e2) {
                             YY::Log('error', $e2->getMessage());
                         }
                     }
-//                    return;
-                }   
+                }
             }
 
             if (YY::$RELOAD_URL) {
