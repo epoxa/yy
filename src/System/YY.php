@@ -256,7 +256,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 	 * @throws EReloadSignal
 	 * Allow to be called from inside event handlers as well as inside _PAINT
 	 */
-	static public function redirectUrl($url = null, $top = false)
+	static public function redirectUrl($url = null, $top = false, $message = null)
 	{
 		YY::Log('system', 'Reload signal initiated');
 		if ($url) {
@@ -265,7 +265,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 			self::$RELOAD_URL = PROTOCOL . ROOT_URL . (YY::$CURRENT_VIEW['queryString'] ? '?' . YY::$CURRENT_VIEW['queryString'] : '');
 		}
 		self::$RELOAD_TOP = $top;
-		throw new EReloadSignal();
+		throw new EReloadSignal($message);
 	}
 
 	static private function drawReload($message = null)
@@ -445,12 +445,18 @@ class YY extends Robot // Странно, похоже, такое наслед�
                 } catch (Exception $e) {
                     ob_end_clean();
                     YY::Log('error', $e->getMessage());
-                    $msg = null;
-                    if (DEBUG_MODE && DEBUG_ALLOWED_IP) {
-                        $msg = $e->getMessage();
+                    if (isset(YY::$WORLD, YY::$WORLD['SYSTEM'], YY::$WORLD['SYSTEM']['error'])) {
+                        try {
+                            YY::$WORLD['SYSTEM']->error([
+                                'error' => $e,
+                                'message' => $e->getMessage(), // For backword compatability
+                            ]);
+                        } catch (EReloadSignal $eReload) {
+                            self::drawReload($eReload->getMessage());
+                        } catch (\Throwable $e2) {
+                            YY::Log('error', $e2->getMessage());
+                        }
                     }
-                    self::drawReload($msg);
-//						Cache::Flush();
                     return;
                 }
             }
