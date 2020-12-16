@@ -449,7 +449,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
                         try {
                             YY::$WORLD['SYSTEM']->error([
                                 'error' => $e,
-                                'message' => $e->getMessage(), // For backword compatability
+                                'message' => $e->getMessage(), // For backward compatability
                             ]);
                         } catch (EReloadSignal $eReload) {
                             self::drawReload($eReload->getMessage());

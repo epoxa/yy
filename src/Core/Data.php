@@ -25,7 +25,10 @@ set_error_handler(function ($errno, $errstr, $errfile, $errline, $errcontext) {
     $msg = $errfile . "(" . $errline . ")" . "\n" . $errstr;
     YY::Log('error', $msg);
     if (isset(YY::$WORLD, YY::$WORLD['SYSTEM'], YY::$WORLD['SYSTEM']['error'])) {
-        YY::$WORLD['SYSTEM']->error(['message' => $msg]);
+        YY::$WORLD['SYSTEM']->error([
+            'error' => new Exception($msg),
+            'message' => $msg, // For backward compatability
+        ]);
     }
     return false;
 });
