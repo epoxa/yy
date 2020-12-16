@@ -457,8 +457,8 @@ class YY extends Robot // Странно, похоже, такое наслед�
                             YY::Log('error', $e2->getMessage());
                         }
                     }
-                    return;
-                }
+//                    return;
+                }   
             }
 
             if (YY::$RELOAD_URL) {
