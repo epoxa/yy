@@ -23,6 +23,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 	static public $ME;
 
 	static public $RELOAD_URL;
+	static public $RELOAD_MESSAGE;
 	static public $RELOAD_TOP;
 
 	/**
@@ -265,12 +266,14 @@ class YY extends Robot // Странно, похоже, такое наслед�
 			self::$RELOAD_URL = PROTOCOL . ROOT_URL . (YY::$CURRENT_VIEW['queryString'] ? '?' . YY::$CURRENT_VIEW['queryString'] : '');
 		}
 		self::$RELOAD_TOP = $top;
+		self::$RELOAD_MESSAGE = $message;
 		throw new EReloadSignal($message);
 	}
 
 	static private function drawReload($message = null)
 	{
 		$json = [];
+		$message = $message ?? self::$RELOAD_MESSAGE;
 		if ($message) {
 			$message = json_encode($message);
 			$json['<'] = "alert($message)";
@@ -1153,7 +1156,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
                     $who->$do($params);
                 }
 			} catch (Exception $e) {
-				if (get_class($e) !== 'YY\System\Exception\EReloadSignal') throw($e);
+				if (!($e instanceof EReloadSignal)) throw($e);
 			}
 		}
 	}
