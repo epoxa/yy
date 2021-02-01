@@ -18,8 +18,6 @@ use Serializable;
 use YY\System;
 use YY\System\YY;
 
-// TODO: Move error handler to core class
-
 set_error_handler(function ($errno, $errstr, $errfile, $errline, $errcontext) {
     if (!(error_reporting() & $errno)) return;
     $msg = $errfile . "(" . $errline . ")" . "\n" . $errstr;
@@ -31,6 +29,16 @@ set_error_handler(function ($errno, $errstr, $errfile, $errline, $errcontext) {
         ]);
     }
     return false;
+});
+
+set_exception_handler(function (\Throwable $e) {
+    YY::Log('error', CoreUtils::jTraceEx($e));
+    if (isset(YY::$WORLD, YY::$WORLD['SYSTEM'], YY::$WORLD['SYSTEM']['error'])) {
+        YY::$WORLD['SYSTEM']->error([
+            'error' => $e,
+            'message' => $msg
+        ]);
+    }
 });
 
 

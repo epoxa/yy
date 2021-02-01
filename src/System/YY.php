@@ -4,6 +4,7 @@ namespace YY\System;
 use Exception;
 use ReflectionFunction;
 use YY\Core\Cache;
+use YY\Core\CoreUtils;
 use YY\Core\Data;
 use YY\Core\Importer;
 use YY\System\Exception\EReloadSignal;
@@ -447,7 +448,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
                     }
                 } catch (Exception $e) {
                     ob_end_clean();
-                    YY::Log('error', $e->getMessage());
+                    YY::Log('error', CoreUtils::jTraceEx($e));
                     if (isset(YY::$WORLD, YY::$WORLD['SYSTEM'], YY::$WORLD['SYSTEM']['error'])) {
                         try {
                             YY::$WORLD['SYSTEM']->error([
@@ -458,7 +459,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
                             self::drawReload($eReload->getMessage());
                             return;
                         } catch (\Throwable $e2) {
-                            YY::Log('error', $e2->getMessage());
+                            YY::Log('error', CoreUtils::jTraceEx($e2));
                         }
                     } else {
                         // Default exception handling
