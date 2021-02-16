@@ -36,7 +36,7 @@ set_exception_handler(function (\Throwable $e) {
     if (isset(YY::$WORLD, YY::$WORLD['SYSTEM'], YY::$WORLD['SYSTEM']['error'])) {
         YY::$WORLD['SYSTEM']->error([
             'error' => $e,
-            'message' => $msg
+            'message' => $e->getMessage(),
         ]);
     }
 });
@@ -677,7 +677,8 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
     {
         $res = [];
         foreach ($this->properties[false] as $key => $val) {
-            if (is_object($val)) $val = $val->_toArray();
+            if (is_resource($val)) continue;
+            if (is_object($val) && $val instanceof Ref && $val->_OWNER) $val = $val->_toArray();
             $res[$key] = $val;
         }
         return $res;
