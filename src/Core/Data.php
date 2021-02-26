@@ -462,15 +462,19 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         } catch (Exception $e) {
             throw $e;
         }
+        if ($stored_data === '') {
+            YY::Log('core', $YYID . ' - load failed: object deleted');
+            return null;
+        }
         try {
             $stored_data = @unserialize($stored_data);
         } catch (Exception $e) {
             YY::Log('error', $YYID . ' - load failed: ' . print_r($stored_data, true) . "\n" . $e->getMessage());
-            $stored_data = null;
+            return null;
         }
         if ($stored_data instanceof __PHP_Incomplete_Class) {
-            $stored_data = null;
             YY::Log('error', $YYID . ' - load failed: undefined class');
+            return null;
         }
         return $stored_data;
     }
@@ -554,9 +558,11 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
             return !$found_data->_DELETED;
         } else {
             $fileName = self::GetStoredFileName($YYID);
+            $file_exists = file_exists($fileName);
             return
-                file_exists($fileName) && filesize($fileName)
-                || self::$db && dba_exists($YYID, self::$db);
+                $file_exists && filesize($fileName)
+                ||
+                !$file_exists && self::$db && dba_exists($YYID, self::$db);
         }
     }
 
