@@ -761,7 +761,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
                 if (file_exists($persistFileName)) unlink($persistFileName);
             } else if (self::$db) {
                 // Устанавливаем признак того, что объект удален. Когда база будет доступна на запись, он удалится из базы
-                if (file_exists($persistFileName)) file_put_contents($persistFileName, '', LOCK_EX);
+                file_put_contents($persistFileName, '', LOCK_EX);
             } else {
                 if (file_exists($persistFileName)) unlink($persistFileName);
             }
