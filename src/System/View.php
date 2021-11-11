@@ -4,6 +4,7 @@ namespace YY\System;
 
 use Exception;
 use YY\Core\Data;
+use YY\Core\Ref;
 
 class View extends Data
 {
@@ -21,7 +22,7 @@ class View extends Data
 		} else {
 			$transId = count($trans); // Scalar indexes only
 			$trans[$object] = $transId;
-			$trans[$transId] = $object;
+			$trans[$transId] = new Ref($object, false);
 		}
 		return $transId;
 	}
