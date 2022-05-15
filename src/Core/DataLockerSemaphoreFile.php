@@ -50,7 +50,7 @@ class DataLockerSemaphoreFile implements DataLockerSemaphore
         if (file_exists($lockFileName)) {
             @unlink($lockFileName);
         } else {
-            YY::Log('error', 'Lock file absent in ' . getmypid() . ' for ' . $this . "\nSTACK:\n" . print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), true));
+            YY::Log('error', 'Lock file absent in ' . getmypid() . ' for ' . $data->_full_name() . "\nSTACK:\n" . print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), true));
         }
         flock($this->locks[$yyid], LOCK_UN);
         fclose($this->locks[$yyid]);
