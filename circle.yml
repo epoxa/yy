@@ -1,0 +1,21 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/yy
+    machine:
+      enabled: true
+    steps:
+      - checkout
+      - run:
+          command: |
+            mkdir -p default/runtime/log && chmod a+rwX -R default/runtime && \
+            cd docker && docker-compose -f docker-compose-tests.yml up -d && \
+            sleep 20 && \
+            docker-compose -f docker-compose-tests.yml ps && \
+            docker-compose -f docker-compose-tests.yml logs php && \
+            docker-compose -f docker-compose-tests.yml exec -T php apt update && \
+            docker-compose -f docker-compose-tests.yml exec -T php apt install unzip && \
+            docker-compose -f docker-compose-tests.yml exec -T php docker-php-ext-install pcntl && \
+            docker-compose -f docker-compose-tests.yml exec -T php sh -c "curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer" && \
+            docker-compose -f docker-compose-tests.yml exec -T php composer update && \
+            docker-compose -f docker-compose-tests.yml exec -T php vendor/bin/phpunit

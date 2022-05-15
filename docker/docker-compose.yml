@@ -1,0 +1,23 @@
+version: "3"
+services:
+  php:
+    image: php:fpm
+    hostname: php
+    expose:
+      - "9000"
+    volumes:
+      - ./..:/var/www/html
+  web:
+    image: nginx:latest
+    hostname: web
+    links:
+      - php
+    expose:
+      - "80"
+      - "443"
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx.conf.d:/etc/nginx/conf.d
+      - ./..:/var/www/html

@@ -1,0 +1,41 @@
+version: "2.1"
+services:
+  hub:
+    image: selenium/hub
+    environment:
+      CHROMEDRIVER_WHITELISTED_IPS: ""
+    expose:
+      - "4444"
+  php:
+    image: php:fpm
+    hostname: php
+    environment:
+      YY_TEST_BROWSER: "$YY_TEST_BROWSER"
+      YY_TEST_BASE_URL: http://web
+      YY_TEST_SELENIUM_HOST: hub
+      YY_TEST_SELENIUM_PORT: 4444
+    links:
+      - hub
+    expose:
+      - "9000"
+    volumes:
+      - ./..:/var/www/html
+  web:
+    image: nginx
+    hostname: web
+    links:
+      - php
+    expose:
+      - "80"
+      - "443"
+    volumes:
+      - ./nginx.conf.d:/etc/nginx/conf.d
+      - ./..:/var/www/html
+  node:
+    image: "selenium/node-$YY_TEST_BROWSER:3.4"
+    links:
+      - web
+      - hub
+    environment:
+      HUB_PORT_4444_TCP_ADDR: hub
+      HUB_PORT_4444_TCP_PORT: 4444
