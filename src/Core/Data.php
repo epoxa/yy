@@ -18,7 +18,7 @@ use Serializable;
 use YY\System;
 use YY\System\YY;
 
-set_error_handler(function ($errno, $errstr, $errfile, $errline, $errcontext) {
+set_error_handler(function ($errno, $errstr, $errfile, $errline) {
     if (!(error_reporting() & $errno)) return;
     $msg = $errfile . "(" . $errline . ")" . "\n" . $errstr;
     YY::Log('error', $msg);
@@ -140,18 +140,28 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         }
         $lock = flock($fo, LOCK_EX);
         if (!$lock) {
+            fclose(self::$locks[$yyid]);
+            unset(self::$locks[$yyid]);
+            @unlink($lockFileName);
             throw new Exception('Can not acquire exclusive lock for ' . $this->_full_name());
         }
-        self::$locks[$yyid] = $fo;
-        $this->properties[false] = [];
-        $this->properties[true] = [];
-        /** @var Data $myActualCopy */
-        $myActualCopy = self::_internalLoadObject($yyid);
-        if ($myActualCopy) {
-            $allKeys = $myActualCopy->_all_keys();
-            foreach($allKeys as $key) {
-                $this[$key] = $myActualCopy->_DROP($key);
+        try {
+            self::$locks[$yyid] = $fo;
+            $this->properties[false] = [];
+            $this->properties[true] = [];
+            /** @var Data $myActualCopy */
+            $myActualCopy = self::_internalLoadObject($yyid);
+            if ($myActualCopy) {
+                $allKeys = $myActualCopy->_all_keys();
+                foreach($allKeys as $key) {
+                    $this[$key] = $myActualCopy->_DROP($key);
+                }
             }
+        } catch (\Throwable $e) {
+            flock(self::$locks[$yyid], LOCK_UN);
+            fclose(self::$locks[$yyid]);
+            unset(self::$locks[$yyid]);
+            @unlink($lockFileName);
         }
         $this->modified = false;
         YY::Log('system', 'LOCK ' . getmypid() . ': ' . $this->_full_name());

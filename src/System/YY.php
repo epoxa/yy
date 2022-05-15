@@ -1054,7 +1054,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 
 	// При вызове этой функции надо подавлять вывод на экран. Только действие, никакого отображения!
 
-	static private final function _DO($_DATA)
+	static private function _DO($_DATA)
 	{
 		if (isset($_DATA['who'])) {
 			$who = $_DATA['who'];
@@ -1162,7 +1162,7 @@ class YY extends Robot // Странно, похоже, такое наслед�
 		}
 	}
 
-	static private final function _GET($_DATA)
+	static private function _GET($_DATA)
 	{
 		$who = $_DATA['who'];
 		assert(isset($who));
@@ -1368,6 +1368,9 @@ class YY extends Robot // Странно, похоже, такое наслед�
         }
         if (isset($_COOKIE['XDEBUG_SESSION'])) {
             putenv("XDEBUG_SESSION=$_COOKIE[XDEBUG_SESSION]");
+        }
+        if (isset($_COOKIE['XDEBUG_PROFILE'])) {
+            putenv("XDEBUG_PROFILE=$_COOKIE[XDEBUG_PROFILE]");
         }
 		YY::Log("system", $cmd);
 		exec("$cmd > /dev/null &", $output, $ret);
