@@ -986,7 +986,5 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         if (isset($this->properties[0]['_path'])) $res--;
 		return $res;
     }
-
-
 }
 
