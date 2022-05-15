@@ -54,17 +54,9 @@ set_exception_handler(function (\Throwable $e) {
  */
 class Data implements Serializable, Iterator, ArrayAccess, Countable
 {
-    /**
-     * @var DataLockerSemaphore|null should be configured during bootstrap initialization
-     */
-    public static ?DataLockerSemaphore $dataLocker = null;
+    static private DataRepository $repository;
+    static private ?DataLockerSemaphore $dataLocker = null;
 
-    const DBA_HANDLER = 'db4';
-    /**
-     * @var $db resource - локальная dba база открытая на чтение при инициализации класса
-     */
-    static private $db;
-    static private $storageIsWritable = false;
     protected $properties
         = [
             false => [], // Для скалярных индексов
@@ -75,6 +67,22 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
     private $ref;
     private $_state;
     private $iterator_index = null;
+
+    /**
+     * @var DataRepository should be configured during bootstrap initialization
+     */
+    public static function useRepository(DataRepository $repository): void
+    {
+        self::$repository = $repository;
+    }
+
+    /**
+     * @var DataLockerSemaphore|null should be configured during bootstrap initialization
+     */
+    public static function useLocker(DataLockerSemaphore $lockerSemaphore): void
+    {
+        self::$dataLocker = $lockerSemaphore;
+    }
 
     /**
      * Data constructor.
@@ -112,18 +120,12 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
                 $yyid = md5(uniqid(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '', true));
             } while (
                 Cache::Find($yyid) !== null
-                || file_exists(self::GetStoredFileName($yyid))
-                || self::$db && dba_exists($yyid, self::$db)
+                || self::$repository->isObjectExists($yyid)
             );
         } catch (Exception $e) {
             ob_end_clean();
         }
         return $yyid;
-    }
-
-    static public function GetStoredFileName($YYID)
-    {
-        return DATA_DIR . $YYID . ".yy";
     }
 
     public function _acquireExclusiveAccess()
@@ -163,139 +165,24 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         self::$dataLocker->Unlock($this);
     }
 
-    static protected function FileGetContentsGracefully($path)
-    {
-        $fo = fopen($path, 'r');
-        $wb = 1;
-        $locked = flock($fo, LOCK_SH, $wb);
-        if (!$locked) {
-            return false;
-        } else {
-            $cts = file_get_contents($path);
-            flock($fo, LOCK_UN);
-            fclose($fo);
-            return $cts;
-        }
-    }
-
     static public function InitializeStorage($writable = false)
     {
-        if (!function_exists('dba_handlers') || !in_array(Data::DBA_HANDLER, dba_handlers())) return;
-        if (self::$db && self::$storageIsWritable === $writable) return;
-        if (self::$db) {
-            dba_close(self::$db);
-            self::$db = null;
-        }
-        $dbPath = DATA_DIR . "DATA.db";
-        if (!file_exists($dbPath)) {
-            self::$db = @dba_open($dbPath, 'cd', Data::DBA_HANDLER);
-            dba_close(self::$db);
-            self::$db = null;
-        }
-        if ($writable) {
-            try {
-                self::$db = @dba_open($dbPath, 'wdt', Data::DBA_HANDLER);
-            } catch (Exception $e) {
-                // do nothing
-            }
-            self::$storageIsWritable = !!self::$db;
-            if (!self::$storageIsWritable) {
-                self::$db = dba_open($dbPath, 'rd', Data::DBA_HANDLER);
-            }
-        } else {
-            self::$db = dba_open($dbPath, 'rd', Data::DBA_HANDLER);
-            self::$storageIsWritable = false;
-        }
+        self::$repository->initializeStorage($writable);
     }
 
     static public function FlushTempFiles()
     {
-        if (!self::$storageIsWritable) return;
-        // Ну раз нам повезло, почистим все временные файлы, сохранив их в локальную БД
-        $dir = opendir(DATA_DIR);
-        while (($file = readdir($dir)) !== false) {
-            if (substr($file, -3) === '.yy') {
-                $key = substr($file, 0, -3);
-                $data = self::FileGetContentsGracefully(DATA_DIR . $file);
-                if (unlink(DATA_DIR . $file)) {
-                    if ($data === '') {
-                        dba_delete($key, self::$db);
-                    } else {
-                        dba_replace($key, $data, self::$db);
-                    }
-                }
-            }
-        }
-        closedir($dir);
+        self::$repository->tryProcessUncommitedChanges();
     }
 
     static public function DetachStorage()
     {
-        if (self::$db) {
-            dba_close(self::$db);
-            self::$db = null;
-            self::$storageIsWritable = false;
-        }
+        self::$repository->detachStorage();
     }
 
     static public function GetStatistics()
     {
-        $cnt = 0;
-        $dataSum = 0;
-        $keySum = 0;
-        $maxDataSize = null;
-        $minDataSize = null;
-        if (self::$db && !!$key = dba_firstkey(self::$db)) {
-            do {
-                $data = dba_fetch($key, self::$db);
-                $cnt++;
-                $keySum += strlen($key);
-                $currDataSize = strlen($data);
-                $dataSum += $currDataSize;
-                if (!isset($minDataSize) || $currDataSize < $minDataSize) $minDataSize = $currDataSize;
-                if (!isset($maxDataSize) || $currDataSize > $maxDataSize) $maxDataSize = $currDataSize;
-            } while (!!$key = dba_nextkey(self::$db));
-        }
-
-        $dir = opendir(DATA_DIR);
-        while (($file = readdir($dir)) !== false) {
-            if (substr($file, -3) === '.yy') {
-                $key = substr($file, 0, -3);
-                $data = self::FileGetContentsGracefully(DATA_DIR . $file);
-                $cnt++;
-                $keySum += strlen($key);
-                $currDataSize = strlen($data);
-                $dataSum += $currDataSize;
-                if (!isset($minDataSize) || $currDataSize < $minDataSize) $minDataSize = $currDataSize;
-                if (!isset($maxDataSize) || $currDataSize > $maxDataSize) $maxDataSize = $currDataSize;
-            }
-        }
-
-        $frmt = function ($sz) {
-            if ($sz < 0x400) {
-                return sprintf('%d bytes', $sz);
-            } else if ($sz < 0x100000) {
-                return sprintf('%.1F KB', $sz / 0x400);
-            } else if ($sz < 0x40000000) {
-                return sprintf('%.1F MB', $sz / 0x100000);
-            } else return sprintf('%.1F GB', $sz / 0x40000000);
-        };
-        if (self::$db) {
-            $fileSize = filesize(DATA_DIR . 'DATA.db');
-        } else {
-            $fileSize = null;
-        }
-        return [
-            'objCount' => $cnt,
-            'avgKeySize' => $frmt($keySum / $cnt),
-            'avgDataSize' => $frmt($dataSum / $cnt),
-            'totalKeySize' => $frmt($keySum),
-            'totalDataSize' => $frmt($dataSum),
-            'minDataSize' => $minDataSize . ' bytes',
-            'maxDataSize' => $maxDataSize . ' bytes',
-            'databaseSize' => $fileSize ? $frmt($fileSize) : 'N/A',
-            'databaseFill' => $fileSize ? sprintf('%.1F', ($dataSum + $keySum) / $fileSize * 100) . ' %' : 'N/A',
-        ];
+        return self::$repository->getStatistics();
     }
 
     static public function _isClass($obj, $className)
@@ -440,17 +327,8 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
     }
 
     static protected function _internalLoadObject($YYID) {
-        $fName = self::GetStoredFileName($YYID);
-        try {
-            if (file_exists($fName)) {
-                $stored_data = self::FileGetContentsGracefully($fName);
-            } else if (self::$db && !!($stored_data = dba_fetch($YYID, self::$db))) {
-            } else {
-                return null;
-            };
-        } catch (Exception $e) {
-            throw $e;
-        }
+        $stored_data = self::$repository->readSerializedObject($YYID);
+        if ($stored_data === null) return null;
         if ($stored_data === '') {
             YY::Log('core', $YYID . ' - load failed: object deleted');
             return null;
@@ -473,7 +351,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         if (!$force) {
             $found_data = Cache::Find($YYID);
             if (isset($found_data)) {
-                YY::Log('system', "$found_data  found in cache");
+                YY::Log('system', "$found_data found in cache");
                 return $found_data;
             }
         }
@@ -546,12 +424,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         if (isset($found_data)) {
             return !$found_data->_DELETED;
         } else {
-            $fileName = self::GetStoredFileName($YYID);
-            $file_exists = file_exists($fileName);
-            return
-                $file_exists && filesize($fileName)
-                ||
-                !$file_exists && self::$db && dba_exists($YYID, self::$db);
+            return self::$repository->isObjectExists($YYID);
         }
     }
 
@@ -740,25 +613,12 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
 
     public function _flush()
     {
-        umask(0007);
         if ($this->_state === null) return false; // Временные объекты не сохраняем
         if (!($this->modified)) return false;
-        $persistFileName = self::GetStoredFileName($this->YYID);
         if ($this->_state === 'deleted') {
-            if (self::$storageIsWritable) {
-                dba_delete($this->YYID, self::$db);
-                if (file_exists($persistFileName)) unlink($persistFileName);
-            } else if (self::$db) {
-                // Устанавливаем признак того, что объект удален. Когда база будет доступна на запись, он удалится из базы
-                file_put_contents($persistFileName, '', LOCK_EX);
-            } else {
-                if (file_exists($persistFileName)) unlink($persistFileName);
-            }
-        } else if (self::$storageIsWritable) {
-            if (file_exists($persistFileName)) unlink($persistFileName);
-            dba_replace($this->YYID, serialize($this), self::$db);
+            self::$repository->deleteObject($this->YYID);
         } else {
-            file_put_contents($persistFileName, serialize($this), LOCK_EX);
+            self::$repository->writeSerializedObject($this->YYID, serialize($this));
         }
         $this->modified = false; // Чтобы больше не лезть к файлам после промежуточного _flush (если таковые будут)
         return true;
