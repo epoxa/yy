@@ -4,6 +4,7 @@ namespace YY\Core;
 
 use YY\System\YY;
 use LogicException;
+use Exception;
 use Redis;
 
 class DataLockerSemaphoreRedis implements DataLockerSemaphore
@@ -27,6 +28,7 @@ class DataLockerSemaphoreRedis implements DataLockerSemaphore
         if ($auth) {
             $this->redis->auth($auth);
         }
+        $this->redis->select(1);
     }
 
     /**
