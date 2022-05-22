@@ -67,6 +67,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
     private $ref;
     private $_state;
     private $iterator_index = null;
+    private $_lockCount = 0;
 
     /**
      * @var DataRepository should be configured during bootstrap initialization
@@ -133,6 +134,10 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         if (!self::$dataLocker) {
             throw new LogicException('Data::$dataLocker interface is not configured');
         }
+        if ($this->_lockCount) {
+            $this->_lockCount++;
+            return;
+        }
         $yyid = $this->_YYID;
         self::$dataLocker->Lock($this);
         try {
@@ -151,6 +156,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
             throw $e;
         }
         $this->modified = false;
+        $this->_lockCount = 1;
         YY::Log('system', 'LOCK ' . getmypid() . ': ' . $this->_full_name());
         return true;
     }
@@ -160,9 +166,14 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         if (!self::$dataLocker) {
             throw new LogicException('Data::$dataLocker interface is not configured');
         }
+        if ($this->_lockCount > 1) {
+            $this->_lockCount--;
+            return;
+        }
         YY::Log('system', 'RELEASE ' . getmypid() . ': ' . $this->_full_name());
         $this->_flush();
         self::$dataLocker->Unlock($this);
+        $this->_lockCount = 0;
     }
 
     static public function InitializeStorage($writable = false)
