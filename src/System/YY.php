@@ -1366,11 +1366,24 @@ class YY extends Robot // Странно, похоже, такое наслед�
             $me = YY::$ME->_YYID;
             $cmd .= " me=$me";
         }
+        $xdebugEnabled = false;
         if (isset($_COOKIE['XDEBUG_SESSION'])) {
             putenv("XDEBUG_SESSION=$_COOKIE[XDEBUG_SESSION]");
+            $xdebugEnabled = true;
         }
         if (isset($_COOKIE['XDEBUG_PROFILE'])) {
             putenv("XDEBUG_PROFILE=$_COOKIE[XDEBUG_PROFILE]");
+            $xdebugEnabled = true;
+        }
+        if (isset($_COOKIE['XDEBUG_TRACE'])) {
+            putenv("XDEBUG_TRACE=$_COOKIE[XDEBUG_PROFILE]");
+            $xdebugEnabled = true;
+        }
+        if (!$xdebugEnabled) {
+            $xdebugPresent = function_exists('xdebug_info');
+            if ($xdebugPresent) {
+                putenv("XDEBUG_MODE=off");
+            }
         }
 		YY::Log("system", $cmd);
 		exec("$cmd > /dev/null &", $output, $ret);
