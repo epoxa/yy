@@ -176,6 +176,16 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         $this->_lockCount = 0;
     }
 
+    function doLocked(callable $code)
+    {
+        $this->_acquireExclusiveAccess();
+        try {
+            return $code();
+        } finally {
+            $this->_releaseExclusiveAccess();
+        }
+    }
+
     static public function InitializeStorage($writable = false)
     {
         self::$repository->initializeStorage($writable);
