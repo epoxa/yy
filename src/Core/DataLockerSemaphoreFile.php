@@ -2,22 +2,32 @@
 
 namespace YY\Core;
 
+use RuntimeException;
 use YY\System\YY;
-use LogicException;
 
 class DataLockerSemaphoreFile implements DataLockerSemaphore
 {
+    protected string $dataDir;
 
-    private $locks = [];
+    public function __construct(string $dataDir)
+    {
+        $this->dataDir = rtrim($dataDir, "/\\");
+    }
+
+    /**
+     * @var array<string, resource>
+     */
+    private array $locks = [];
     /**
      * @param Data|Ref $data
-     * @throws Exception
+     * @throws RuntimeException
      */
     function Lock($data): void
     {
         $this->checkRequirements();
         $yyid = $data->_YYID;
         $lockFileName = $this->getLockFileName($yyid);
+        /** @noinspection PhpUnusedLocalVariableInspection */
         $fo = null;
         for ($i = 0; $i < 200; $i++) {
             $fo = @fopen($lockFileName, 'x');
@@ -40,7 +50,7 @@ class DataLockerSemaphoreFile implements DataLockerSemaphore
 
     /**
      * @param Data|Ref $data
-     * @throws Exception
+     * @throws RuntimeException
      */
     function Unlock($data): void
     {
@@ -59,11 +69,8 @@ class DataLockerSemaphoreFile implements DataLockerSemaphore
 
     private function checkRequirements(): void
     {
-        if (!defined('LOCK_DIR')) {
-            throw new LogicException('Constant LOCK_DIR should be defined to use ' . __CLASS__);
-        }
-        if (!file_exists(LOCK_DIR)) {
-            mkdir(LOCK_DIR, 0777, true);
+        if (!file_exists($this->dataDir)) {
+            mkdir($this->dataDir, 0777, true);
         }
     }
 
@@ -73,15 +80,15 @@ class DataLockerSemaphoreFile implements DataLockerSemaphore
      */
     private function getLockFileName(string $yyid): string
     {
-        $lockFileName = LOCK_DIR . $yyid . ".lock";
-        return $lockFileName;
+        return $this->dataDir . DIRECTORY_SEPARATOR . $yyid . ".lock";
     }
 
     /**
      * @param $data
+     * @throws RuntimeException
      */
     private function throwLockException($data): void
     {
-        throw new Exception('Can not acquire exclusive lock for ' . $data->_full_name());
+        throw new RuntimeException("Can not acquire exclusive lock for " . $data->_full_name());
     }
 }
