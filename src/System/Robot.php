@@ -59,7 +59,7 @@ class Robot extends Data
 			$param_name = $objectParam[1];
 		}
 		$objectHandle = YY::GetHandle($object);
-		$script = "setFocusElement(document.getElementById('${objectHandle}[${param_name}]'))";
+		$script = "setFocusElement(document.getElementById('{$objectHandle}[{$param_name}]'))";
 		YY::clientExecute($script);
 	}
 
