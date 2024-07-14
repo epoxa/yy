@@ -661,6 +661,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
     // Iterator
     ///////////////////////
 
+    #[\ReturnTypeWillChange]
     public function current()
     {
         if ($this->valid()) {
