@@ -21,7 +21,7 @@ use YY\System;
 use YY\System\YY;
 
 set_error_handler(function ($errno, $errstr, $errfile, $errline) {
-    if (!(error_reporting() & $errno)) return;
+    if (!(error_reporting() & $errno)) return false;
     $msg = $errfile . "(" . $errline . ")" . "\n" . $errstr;
     YY::Log('error', $msg);
     if (isset(YY::$WORLD, YY::$WORLD['SYSTEM'], YY::$WORLD['SYSTEM']['error'])) {
@@ -136,7 +136,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         }
         if ($this->_lockCount) {
             $this->_lockCount++;
-            return;
+            return true;
         }
         $yyid = $this->_YYID;
         self::$dataLocker->Lock($this);
@@ -253,6 +253,18 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         } else {
             return '[' . $this->YYID . ':' . get_class($this) . ']';
         }
+    }
+
+    public function __serialize(): array
+    {
+        return $this->properties;
+    }
+
+    public function __unserialize(array $data): void
+    {
+        $this->properties = $data;
+        $this->modified = false;
+        $this->_state = 'assigned';
     }
 
     public function serialize()
