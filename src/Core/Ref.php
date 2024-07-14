@@ -40,7 +40,23 @@ class Ref implements Serializable, Iterator, ArrayAccess, Countable
 		return 'R:' . $this->_DAT->_full_name();
 	}
 
-	public function serialize()
+    public function __serialize(): array
+    {
+        $result = ['_YYID' => $this->YYID];
+        if ($this->_isOwner) {
+            $result['_isOwner'] = true;
+        }
+        return $result;
+    }
+
+    public function __unserialize(array $data): void
+    {
+        $this->YYID = $data['_YYID'];
+        $this->_isOwner = $data['_isOwner'] ?? false;
+    }
+
+
+    public function serialize()
 	{
 		$str = $this->YYID;
 		if ($this->_isOwner) $str = '!' . $str;
@@ -135,26 +151,31 @@ class Ref implements Serializable, Iterator, ArrayAccess, Countable
 	// Iterator
 	///////////////////////
 
+    #[\ReturnTypeWillChange]
 	public function current()
 	{
 		return $this->_DAT->current();
 	}
 
+    #[\ReturnTypeWillChange]
 	public function key()
 	{
 		return $this->_DAT->key();
 	}
 
+    #[\ReturnTypeWillChange]
 	public function next()
 	{
 		$this->_DAT->next();
 	}
 
+    #[\ReturnTypeWillChange]
 	public function rewind()
 	{
 		$this->_DAT->rewind();
 	}
 
+    #[\ReturnTypeWillChange]
 	public function valid()
 	{
 		return $this->_DAT->valid();
@@ -164,21 +185,25 @@ class Ref implements Serializable, Iterator, ArrayAccess, Countable
 	// ArrayAccess
 	///////////////////////
 
+    #[\ReturnTypeWillChange]
 	public function offsetExists($offset)
 	{
 		return $this->_DAT->offsetExists($offset);
 	}
 
+    #[\ReturnTypeWillChange]
 	public function offsetGet($offset)
 	{
 		return $this->_DAT->offsetGet($offset);
 	}
 
+    #[\ReturnTypeWillChange]
 	public function offsetSet($offset, $value)
 	{
 		$this->_DAT->offsetSet($offset, $value);
 	}
 
+    #[\ReturnTypeWillChange]
 	public function offsetUnset($offset)
 	{
 		$this->_DAT->offsetUnset($offset);
@@ -188,7 +213,7 @@ class Ref implements Serializable, Iterator, ArrayAccess, Countable
 	// Countable
 	///////////////////////
 
-	public function count()
+	public function count(): int
 	{
 		return $this->_DAT->count();
 	}
