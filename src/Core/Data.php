@@ -680,11 +680,13 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         }
     }
 
+    #[\ReturnTypeWillChange]
     public function valid()
     {
         return isset($this->iterator_index) && array_key_exists($this->iterator_index, $this->properties[false]);
     }
 
+    #[\ReturnTypeWillChange]
     public function key()
     {
         if ($this->valid()) {
@@ -694,6 +696,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         }
     }
 
+    #[\ReturnTypeWillChange]
     public function rewind()
     {
         $keys = array_keys($this->properties[false]);
@@ -706,6 +709,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         } else $this->iterator_index = null;
     }
 
+    #[\ReturnTypeWillChange]
     public function next()
     {
         $keys = array_keys($this->properties[false]);
@@ -743,6 +747,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
      * @return bool
      */
 
+    #[\ReturnTypeWillChange]
     public function offsetExists($offset)
     {
 
@@ -755,6 +760,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
 
     }
 
+    #[\ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
 
@@ -773,6 +779,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
         $this->modified = true;
     }
 
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
 
@@ -806,6 +813,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
 
     }
 
+    #[\ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
 
@@ -872,6 +880,7 @@ class Data implements Serializable, Iterator, ArrayAccess, Countable
     // Countable
     ///////////////////////
 
+    #[\ReturnTypeWillChange]
     public function count()
     {
         //    return count($this->properties[false]) + count($this->properties[true]);
