@@ -155,8 +155,14 @@ class DefaultLogger implements LogInterface
         }
         // Окончательный отладочный вывод запроса и статистики
         if ($this->debugCheck()) {
-            if (!isset(YY::$ME) && function_exists("getallheaders")) {
-                $this->directWrite('debug', 'HTTP ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI']);
+            if (!isset(YY::$ME)
+                && function_exists("getallheaders")
+                && isset($_SERVER['REQUEST_METHOD'])
+                && isset($_SERVER['REQUEST_URI'])
+            ) {
+                $requestMethod = $_SERVER['REQUEST_METHOD'];
+                $requestUri = $_SERVER['REQUEST_URI'];
+                $this->directWrite('debug', 'HTTP ' . $requestMethod . ' ' . $requestUri);
                 $this->directWrite('debug', print_r(getallheaders(), true));
             }
         }
